@@ -1,0 +1,261 @@
+
+\section{Experimental Results}\label{sec:Experiments}
+
+We implemented our symbolic dynamic programming algorithm
+(Section~\ref{SymbolicDPCores}) for {\sc Vertex Cover} and evaluated its
+performance in two experiments. The main goal of our experiments is to evaluate the efficiency of representing sets of partial solutions using OBDDs, as done in our symbolic algorithm, rather than explicitly, as done in traditional dynamic programming algorithms. Intuitively, the number of bits necessary to store a set of partial solutions in an explicitly DP algorithm is upper-bounded by a polynomial on the size of the bag and on the number of partial solutions associated with that bag. On the other hand, the time necessary to process a bag in a symbolic DP algorithm is upper-bounded by a polynomial on the number of transitions of the minimum-size OBDD representing the set of partial solutions associated with that bag.
+
+\textbf{Experiment 1.}
+We evaluate the performance of our {\sc Vertex Cover} SDP on randomly generated
+graphs. While our theoretical results show that symbolic DP admits solution-set
+representations that are orders of magnitude more compact than those of standard
+DP for certain graph classes (notably complete graphs and rook graphs) under
+immediate tree decompositions, the goal of this experiment is to assess whether
+symbolic DP over naively constructed immediate tree decompositions provides
+practical efficiency advantages on collections of random graph instances. This allows us to assess whether bounded SDP-width translates into empirical
+performance gains beyond analytically well-structured graph classes.
+
+
+\textbf{Experiment 2.}
+In the second experiment, we apply our SDP for {\sc Vertex Cover} to naively
+constructed immediate tree decompositions of $n \times n$ rook graphs. This
+experiment explores the practical limits of tractability of our implementation.
+In contrast to complete graphs, which admit constant SDP-width bounds,
+rook graphs are distinguished by having super-polynomially many optimal
+{\sc Vertex Cover} solutions. As a result, Experiment~2 additionally evaluates
+the extent to which symbolic DP can compress large collections of optimal
+solutions in comparison to standard DP in a naive experimental setting.
+
+Our choice of using immediate tree decompositions is motivated by two
+considerations. First, computing optimal tree decompositions for random graphs
+is computationally expensive, since random graphs from the considered classes
+typically have treewidth $\Theta(n)$, with the hidden constant depending on the
+edge sampling probability. Second, this choice allows us to evaluate the
+behavior of our algorithm on sub-optimal decompositions. Indeed, a key advantage
+of our symbolic algorithm is its ability to produce reasonable results even when
+guided by decompositions of large width.
+
+\paragraph*{Dataset generation}
+For Experiment~1, we generate labeled Erd\H{o}s--R\'enyi random graphs with
+varying edge-deletion probabilities, as well as random grid graphs obtained in a
+similar fashion. More specifically, for each $r \in \{2,\dots,64\}$ and each
+$\ell \in \{1,\dots,9\}$, we generate three random graph instances by starting
+from the complete graph on $n = 4r$ vertices and deleting each edge independently
+with probability $p = 0.1\ell$. The second family of instances is generated
+analogously, except that the initial graph is an $n \times n$ grid graph rather
+than a complete graph.
+
+For Experiment~2, we generate labeled $n \times n$ rook graphs for values of
+$n$ up to $15$.
+
+Once the instances have been generated, we construct for each graph a naive
+immediate path decomposition as follows. Vertices are introduced sequentially in
+order of their labels. An edge is introduced as soon as both of its endpoints
+have been introduced, and a vertex is forgotten as soon as all edges incident to
+it have been introduced.
+
+%%%%%%%
+
+% Our choice of using immediat tree decompositions Our choice has two motivations. First, computing optimal tree decompositions of random graphs is an expensive task, since random graphs belonging to each of the chosen classes have treewidth $\Theta(n)$, where the hidden constant depends on the sampling probability. Second, this choice allows us to evaluate our algorithm on sub-optimal tree decompositions. In fact, one advantage of our symbolic algorithm is that it can produce reasonable results even for decompositions of a large width.
+
+
+% We implemented our symbolic algorithm (section \ref{SymbolicDPCores}) for {\sc Vertex Cover} and evaluated its performance in two main experiments. 
+% \textbf{Experiment 1:} In this experiment we therefore test our {\sc Vertex Cover} SDP on randomly generated graphs.  While we have found analytically that symbolic DP admits solution set representations orders of magnitude more compact compared to standard DP over specific graph classes (complete graphs and rook graphs) and over immediate tree decompositions, the objective of experiment 1 is to investigate whether Symbolic DP over naively constructed immediate tree decompositions offers efficiency advantages on collections of random graph data. 
+% \textbf{Experiment 2:} In our second experiment we run our SDP for {\sc Vertex Cover} on naively generated immediate tree decompositions fon $n$ by $n$ rook graphs. Experiment 2 over rook graphs investigates the practical limits of tractability for our implemented SDP. Further, while clique graphs for example similarly formally admits reasonable SDP-width bounds, rook graphs distinguish themselves in admitting super-polynomially many optimal solutions to {\sc Vertex cover}. Experiment 2 therefore additionally tests the scale of the practical data compression capabilities of our SDP vs standard DP in a naive experimental setup.
+
+% \paragraph*{Dataset generation}
+% For Experiment 1 we generate labelled Erdos-Renyi  random graphs with varyingg edge drop rpobability. We also generate random grid graphs with edge drop varying probability. More specifically To create the first set of instances, for each $r$ in the set $\{2,\dots,64\}$, and each $\ell$ in the set $\{1,\dots,9\}$, we created three instances of random graphs obtained by the complete graph on $n=4r$ vertices by deleting edges uniformly at random with probability $p=0.1\ell$. The second set of instances was created similarly, with the exception that the initial graph was the $n\times n$ grid, instead of the $n$-clique.
+
+% For experiment to we create labeled $n$ by $n$ rook graphs up to $n = 15$.
+
+% For all graphs generatesd Once the instances have been sampled, we created for each instance a trivial path decomposition obtained as follows. Vertices were introduced in order, from $1$ to $n$ of their labesl. Edges were introduced as soon as both of its endpoints were introduced. Finally, each vertex was deleted as soon as all edges incident with it were introduced.
+
+
+% A tree decomposition is \emph{immediate} if whenever a node $u$ is an introduce node, introducing a vertex $v$, all edges incident with $v$ in the graph $G_u$ are subsequently introduced and vertex $v$ is forgotten as soon al edges in $\graphG$ incident to $\vertexv$ are introduced. 
+% Once the instances have been sampled, we created for each instance a trivial path decomposition obtained as follows. Vertices were introduced in order, from $1$ to $n$. Edges were introduced as soon as both of its endpoints were introduced. Finally, each vertex was deleted as soon as all edges incident with it were introduced. Our choice has two motivations. First, computing optimal tree decompositions of random graphs is an expensive task, since random graphs belonging to each of the chosen classes have treewidth $\Theta(n)$, where the hidden constant depends on the sampling probability. Second, this choice allows us to evaluate our algorithm on sub-optimal tree decompositions. In fact, one advantage of our symbolic algorithm is that it can produce reasonable results even for decompositions of a large width. 
+
+
+\paragraph*{Experiment configurations}
+Experiment~1 was run with 256\,GB of allocated RAM, while Experiment~2 was run
+with 1\,024\,GB of allocated RAM, reflecting the higher memory requirements of
+the latter.
+
+
+% We have implemented our symbolic algorithm for vertex cover and evaluated its performance on random graphs of varying sizes. More specifically, we considered two classes of instances. To create the first set of instances, for each $r$ in the set $\{2,\dots,64\}$, and each $\ell$ in the set $\{1,\dots,9\}$, we created three instances of random graphs obtained by the complete graph on $n=4r$ vertices by deleting edges uniformly at random with probability $p=0.1\ell$. The second set of instances was created similarly, with the exception that the initial graph was the $n\times n$ grid, instead of the $n$-clique. It is worth noting that both the $n$-clique and the $n$-grid have treewidth $\theta(n)$. 
+
+% Once the instances have been sampled, we created for each instance a trivial path decomposition obtained as follows. Vertices were introduced in order, from $1$ to $n$. Edges were introduced as soon as both of its endpoints were introduced. Finally, each vertex was deleted as soon as all edges incident with it were introduced. Our choice has two motivations. First, computing optimal tree decompositions of random graphs is an expensive task, since random graphs belonging to each of the chosen classes have treewidth $\theta(n)$, where the hidden constant depends on the sampling probability. Second, this choice allows us to evaluate our algorithm on sub-optimal tree decompositions. In fact, one advantage of our symbolic algorithm is that it can produce reasonable results even for decompositions of a large width. 
+
+% The main goal of our experiments was to evaluate the efficiency of representing sets of partial solutions using OBDDs, as done in our symbolic algorithm, rather than explicitly, as done in traditional dynamic programming algorithms. Intuitively, the number of bits necessary to store a set of partial solutions in an explicitly DP algorithm is upper-bounded by a polynomial on the size of the bag and on the number of partial solutions associated with that bag. On the other hand, the time necessary to process a bag in a symbolic DP algorithm is upper-bounded by a polynomial on the number of transitions of the minimum-size OBDD representing the set of partial solutions associated with that bag.
+
+\paragraph*{Results}
+
+Our experimental results showed that our symbolic dynamic programming algorithm caused a dramatic reduction in the amount of computational resources necessary to process a bag in a tree decomposition. In particular, in both classes of instances of graphs, the number of bits necessary to store a set of partial solutions symbolically was orders of magnitude smaller than the number of bits necessary to store the set explicitly. The results are shown in Figure \ref{fig:ComparisonSizes}. 
+
+\begin{figure*}[h]
+    %\centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+         \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Instructions/clique_instr_width_n_solutions_size_vs_n_of_layers_bound_32.pgf}}
+        %\caption{Clique - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+        \label{fig:clique}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}       
+    \centering
+    \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Instructions/grid_instr_width_n_solutions_size_vs_n_of_layers_bound_32.pgf}}
+        %\caption{Grid - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+        \label{fig:grid}
+    \end{subfigure}
+    \caption{Left: SDP on Erd\H{o}s--R\'enyi random graphs. Figure plots OBDD width, size and number of solutions as s function of treewidth\todo{Technically the x-axis is not the treewidth but number of layers which is one more than the treewidth. We should probably mention this or change this}. Right: SDP on graphs obtained by deleting edges randomly from grid graphs. \label{fig:ComparisonSizes}}
+   
+\end{figure*}
+The left plot corresponds to graphs obtained by deleting edges from a clique graph, while the right plot corresponds to graphs obtained by deleting edges from a grid graph. 
+% Each instance corresponds to three isolated points (an orange, a green, and a blue). In all three points, the x coordinate indicates the width of the tree decomposition associated with that instance. On an orange point, the coordinate $y$ denotes the number of solutions associated with a maximum-width bag. In a green point, the coordinate $y$ denotes the number of transitions of the minimum-size OBDD that represent the corresponding set of partial solutions. Finally, the blue point corresponds to the width of this OBDD. 
+For easy of visualization we also plot one line of each color, where each line interpolates the average value of all points with the same \textit{x}-coordinate. As can be seen in the figures, for decompositions of width 32, the number of solutions in a bag may be thousands of times larger than the number of transitions in the minimum OBDD representing that set. The difference was even more expressive in the class of graphs obtained from grid graphs. 
+
+In the experiments described above, we only consider instances whose corresponding tree decomposition has width at most 32. The reason is that by going beyond this number the number of partial solutions to be considered on each bag is prohibitively large. However, by representing and manipulating these sets implicitly, our symbolic algorithm was able to work with substantially larger width values. In particular, in the class of graphs obtained from a clique, all instances with a decomposition of width at most 60 were solved, while in the class of graphs obtained from the grid, all instances with a decomposition of width up to $70$ were solved. 
+
+Experiment~2 focuses on $n \times n$ rook graphs and further highlights the
+contrast between symbolic and standard dynamic programming. 
+
+\begin{figure*}[h]
+    %\centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+         \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Rook/rook_instr_width_n_solutions_size_vs_n_of_layers.pgf}}
+        %\caption{Clique - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+        \label{fig:rookbytreewidth}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}       
+    \centering
+    \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Rook/rook_size_cputime.pgf}}
+        %\caption{Grid - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+        \label{fig:rookbysize}
+    \end{subfigure}
+    \caption{Left: SDP on rook graphs as a function of treewidth. Right: SDP and standard DP on $n \times n$ rook graphs. This plot shows CPU time in $\mu s$ as a function of dimension $n$.   \label{fig:RookComparison}}
+   
+\end{figure*}
+
+Using naive
+immediate path decompositions, our symbolic DP was able to solve all instances
+up to $n=11$, whereas standard DP failed beyond $n=5$, despite increasing the
+allocated memory to 1\,024\,GB compared to Experiment~1. Although the results do
+not allow for definitive conclusions regarding running time, it is noteworthy
+that symbolic DP was already faster than standard DP for $n=4$ and $n=5$. These
+results suggest that, especially in settings with extremely large numbers of optimal
+solutions, symbolic representations can significantly extend the practical
+tractability of dynamic programming on high-width decompositions.
+
+
+
+% \begin{figure*}[h]
+%     %\centering
+%     \begin{subfigure}{0.48\textwidth}
+%         \centering
+%          \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Instructions/clique_instr_n_transitions_solutions_vs_size.pgf}}
+%         %\caption{Clique - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+%         \label{fig:clique}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.48\textwidth}       
+%     \centering
+%     \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Instructions/grid_instr_width_n_solutions_size_vs_n_of_layers_bound_32.pgf}}
+%         %\caption{Grid - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+%         \label{fig:grid}
+%     \end{subfigure}
+%     \caption{Left: Experiment corresponding to graphs obtained by deleting random edges from a clique graph. Right: Experiment corresponding to graphs obtained by deleting edges from the grid graph. \label{fig:ComparisonSizes}}
+   
+% \end{figure*}
+
+
+
+
+
+
+% We have implemented our symbolic algorithm for vertex cover and evaluated its performance on random graphs of varying sizes. More specifically, we considered two classes of instances. To create the first set of instances, for each $r$ in the set $\{2,\dots,64\}$, and each $\ell$ in the set $\{1,\dots,9\}$, we created three instances of random graphs obtained by the complete graph on $n=4r$ vertices by deleting edges uniformly at random with probability $p=0.1\ell$. The second set of instances was created similarly, with the exception that the initial graph was the $n\times n$ grid, instead of the $n$-clique. It is worth noting that both the $n$-clique and the $n$-grid have treewidth $\theta(n)$. 
+
+% Once the instances have been sampled, we created for each instance a trivial path decomposition obtained as follows. Vertices were introduced in order, from $1$ to $n$. Edges were introduced as soon as both of its endpoints were introduced. Finally, each vertex was deleted as soon as all edges incident with it were introduced. Our choice has two motivations. First, computing optimal tree decompositions of random graphs is an expensive task, since random graphs belonging to each of the chosen classes have treewidth $\theta(n)$, where the hidden constant depends on the sampling probability. Second, this choice allows us to evaluate our algorithm on sub-optimal tree decompositions. In fact, one advantage of our symbolic algorithm is that it can produce reasonable results even for decompositions of a large width. 
+
+% The main goal of our experiments was to evaluate the efficiency of representing sets of partial solutions using OBDDs, as done in our symbolic algorithm, rather than explicitly, as done in traditional dynamic programming algorithms. Intuitively, the number of bits necessary to store a set of partial solutions in an explicitly DP algorithm is upper-bounded by a polynomial on the size of the bag and on the number of partial solutions associated with that bag. On the other hand, the time necessary to process a bag in a symbolic DP algorithm is upper-bounded by a polynomial on the number of transitions of the minimum-size OBDD representing the set of partial solutions associated with that bag.
+
+% Our experimental results showed that our symbolic dynamic programming algorithm caused a dramatic reduction in the amount of computational resources necessary to process a bag in a tree decomposition. In particular, in both classes of instances of graphs, the number of bits necessary to store a set of partial solutions symbolically was orders of magnitude smaller than the number of bits necessary to store the set explicitly. The results are shown in Figure \ref{fig:ComparisonSizes}. The left picture corresponds to graphs obtained by deleting edges from a clique graph, while the right picture corresponds to graphs obtained by deleting edges from a grid graph. Each instance corresponds to three isolated points. An orange, a green, and a blue. In all three points, the x coordinate indicates the width of the tree decomposition associated with that instance. On an orange point, the coordinate $y$ denotes the number of solutions associated with a maximum-width bag. In a green point, the coordinate $y$ denotes the number of transitions of the minimum-size OBDD that represent the corresponding set of partial solutions. Finally, the blue point corresponds to the width of this OBDD. For easy of visualization we also plot one line of each color, where each line interpolates the average value of all points with the same x-coordinate. As can be seen in the figures, for decompositions of width 32, the number of solutions in a bag may be thousands of times larger than the number of transitions in the minimum OBDD representing that set. The difference was even more expressive in the class of graphs obtained from grid graphs. 
+
+% In the experiments described above, we only consider instances whose corresponding tree decomposition has width at most 32. The reason is that by going beyond this number the number of partial solutions to be considered on each bag is prohibitively large. However, by representing and manipulating these sets implicitly, our symbolic algorithm was able to work with substantially larger width values. In particular, in the class of graphs obtained from a clique, all instances with a decomposition of width at most 60 were solved, while in the class of graphs obtained from the grid, all instances with a decomposition of width up to $70$ were solved. 
+
+% \begin{figure*}[h]
+%     %\centering
+%     \begin{subfigure}{0.48\textwidth}
+%         \centering
+%          \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Instructions/clique_instr_width_n_solutions_size_vs_n_of_layers_bound_32.pgf}}
+%         %\caption{Clique - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+%         \label{fig:clique}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.48\textwidth}       
+%     \centering
+%     \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Instructions/grid_instr_width_n_solutions_size_vs_n_of_layers_bound_32.pgf}}
+%         %\caption{Grid - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+%         \label{fig:grid}
+%     \end{subfigure}
+%     \caption{Left: Experiment corresponding to graphs obtained by deleting random edges from a clique graph. Right: Experiment corresponding to graphs obtained by deleting edges from the grid graph. \label{fig:ComparisonSizes}}
+   
+% \end{figure*}
+
+\begin{comment}
+\subsection{Instruction level results}
+
+
+Every graph was created by starting with an $n$-clique or an $n$-grid (a square grid on $n^2$ vertices) and erasing each edge with a given probability $p$. For each pair of $n \in \{ 4k \mid k \in \mathbb{Z}, 2 \leq k \leq 64 \}$ and $p \in \{ 0.1l \mid l \in \{1, 2, \dots, 9\} \}$, we generated 3 instances of of both grid and clique graphs. A simple instructive path decomposition was then obtained for each graph. This involved sorting edges by the indices of their vertices and starting with a set of introduced vertices containing only the first vertex. The process continued by introducing vertices that shared an edge with the smallest vertex in the set of introduced vertices, followed by introducing an edge between the smallest vertex in the set and the previously added vertex. After introducing all edges involving the smallest vertex in the set, the smallest vertex was removed from the set, and the process was repeated until all edges were introduced and all vertices were removed.
+
+We then solved the minimum vertex cover problem using dynamic programming with an OBDD as the data structure to store partial solutions for each instruction, following all principles described in previous chapters of the paper. After obtaining the minimum vertex cover solutions, we had a representation of all partial solutions for each instruction as separate OBDDs.
+
+From these OBDDs, which represent partial solutions at various instructions, we determined the maximum OBDD width across all OBDDs and retained only the first OBDD with that maximum width and the largest number of layers (first in the order of instructions). Across all instances and probabilities, we plotted different properties of these OBDDs in the following graphs:
+
+
+
+
+\begin{figure}[H]
+    \begin{center}
+        \resizebox{3.4in}{!}{\input{Figures/Instructions/clique_instr_width_n_solutions_size_vs_n_of_layers_bound_32.pgf}}
+    \end{center}
+    \caption{Clique - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+        \resizebox{3.4in}{!}{\input{Figures/Instructions/grid_instr_width_n_solutions_size_vs_n_of_layers_bound_32.pgf}}
+    \end{center}
+    \caption{Grid - OBDD width, \# of solutions / \# of transitions (size) vs \# of layers}
+\end{figure}
+\end{comment}
+
+
+\begin{comment}
+Including unsolved instances, we get a dataset of all OBDDs from both solved and unsolved instances. We identify the OBDD with the maximum number of layers and width (based on instruction order).
+
+Figure~\ref{fig:clique_ratio} shows the percentage of OBDDs from solved instances for clique instances, and Figure~\ref{fig:grid_ratio} shows the same for grid instances.
+\end{comment}
+
+
+
+\begin{comment}
+\begin{figure}[H]
+    \begin{center}
+        \resizebox{3.4in}{!}{\input{Figures/Instructions/clique_instr_max_layers_solved_to_unsolved_ratio.pgf}}
+    \end{center}
+    \caption{Clique - \% of OBDDs with $x$ layers which occurred in solved instances}
+    \label{fig:clique_ratio}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+        \resizebox{3.4in}{!}{\input{Figures/Instructions/grid_instr_max_layers_solved_to_unsolved_ratio.pgf}}
+    \end{center}
+    \caption{Grid - \% of OBDDs with $x$ layers which occurred in solved instances}
+    \label{fig:grid_ratio}
+\end{figure}
+
+\end{comment}
+
+

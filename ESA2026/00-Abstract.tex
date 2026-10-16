@@ -1,0 +1,16 @@
+% \begin{abstract}
+% Dynamic programming over tree decompositions is one of the main approaches for the development of parameterized algorithms for combinatorial problems parameterized by treewidth. Given a graph, together with a tree decomposition, a dynamic programming algorithm processes the tree decomposition from the leaves towards the root, constructing for each node a set of local witnesses. The algorithm accepts a graph if the set associated with the root node contains an accepting local witness. 
+% In this work, we initiate the study of dynamic programming algorithms where the set of local witnesses associated with each node is represented implicitly, using ordered binary decision diagrams. On the one hand, the asymptotic complexity of such symbolic algorithms is polynomially related to the asymptotic complexity of the standard DP. On the other hand, symbolic representations may be exponentially smaller than explicit representations. We evaluate our framework experimentally using the vertex cover problem as an explicit example. In our experiments, our symbolic algorithm produced representations of sets of partial solutions orders of magnitude smaller than the size of representations of the standard DP algorithm for vertex cover. 
+% \end{abstract}
+
+\begin{abstract}
+    Dynamic programming over tree decompositions is a highly successful and widely used approach for developing parameterized algorithms for combinatorial problems parameterized by treewidth. Given a graph, together with a tree decomposition, a dynamic programming algorithm processes the tree decomposition from the leaves towards the root, constructing for each node a set of local witnesses. 
+    %The algorithm accepts a graph if the set associated with the root node contains an accepting local witness.  
+    A well known drawback to this technique is that for instances of large treewidth (dense graphs) witness tables grow prohibitively large, thus offering little advantage over brute force.
+
+    In this work, we introduce and evaluate a symbolic dynamic programming framework in which the witness set at each node of a tree decomposition is represented implicitly using ordered binary decision diagrams (OBDDs).
+    Using {\sc Vertex Cover} as a running example, we show analytically that the asymptotic complexity of our symbolic algorithm is, in the worst case, polynomially related to that of standard DP.  
+    On the other hand, we demonstrate experimentally that symbolic representations may be orders of magnitude more succinct than explicit representations. 
+    On (Erd\H{o}s--R\'enyi) random graphs, where explicit partial-solution tables become prohibitively large at average treewidth 32, our symbolic algorithm maintains compact representations and successfully processes decompositions of width 70.
+    We further evaluate scalability on rook graphs, a dense grid-like family admitting factorially many optimal solutions in its dimensions, and find that symbolic DP remains tractable beyond treewidth 140 even in a modest experimental setup.
+\end{abstract}

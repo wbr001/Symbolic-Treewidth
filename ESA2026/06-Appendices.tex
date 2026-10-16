@@ -1,0 +1,1282 @@
+\section{Dynamic Programming Cores}\label{DPcores}
+
+In this work, we will consider a dynamic programming algorithm over a $k$-instructive tree decomposition to operate using a functional framework known as the Dynamic Programming Core (DP-core) \cite{Baste2022,From2023} framework. 
+%We showcase the DP-core framework below in describing a function for each symbol of $\Sigma_k$ that updates a set of partial solutions at a given node.
+This framework assigns to each node of a k-instructive tree decomposition a set of local witnesses in accordance with the instruction at that node. Intuitively, a local witness $\witness \in \{0,1\}^*$, assigned to a node is a binary string recording a partial solution at that node.
+%We describe the components of a DP-core below.
+
+A DP-core operating on $k$-instructive tree decompositions is a record $\dpcore[k]$ consisting of the following components, where $\activelabelu,\activelabelv \in [k+1]$, and 
+$\activelabelu\neq \activelabelv$. 
+
+
+\begin{itemize}
+    \item $\leaf$, is a finite non-empty subset of ${\{0,1\}^*}$;
+    \item $\introvertex{\nodeu}:2^{[k]}\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\introedge{\nodeu}{\activelabelv}:2^{[k]}\times\{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\forgetvertex{\nodeu}:2^{[k]}\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\join:2^{[k]}\times \{0,1\}^*\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$.
+    \item $\final:\{0,1\}^*\rightarrow \{0,1\}$. 
+    \item $\inv:2^{\{0,1\}^*}\rightarrow \N$. 
+\end{itemize}
+%
+
+For each $S\subseteq \{0,1\}^*$, we define $\introvertex{\nodeu}(b,S) = \bigcup_{\witness\in S} \introvertex{\nodeu}(b,S)$. 
+The extension of the remaining components of $\dpcore$ to subsets of strings is defined analogously. 
+
+%We extend the functions 
+%defined above from witnesses to witness sets as follows. 
+
+% \begin{definition}
+% Given a set  $b \subseteq 2^{[k]}$ and subsets $S, S'\subset \{0,1\}^*$, 
+% %
+% \begin{itemize} 
+%     \item $\introvertex{\nodeu}(b,S) = \bigcup_{w\in S} \introvertex{\nodeu}(b,w)$ 
+%     \item $\introedge{\nodeu}{\activelabelv}(b,S) =  \bigcup_{w\in S} \introedge{\nodeu}{\activelabelv}(b,w)$
+%     \item $\forgetvertex{\nodeu}(b,S) = \bigcup_{w\in S}\forgetvertex{\nodeu}(b,w)$
+%     \item $\join(b,S,S') = \bigcup_{w\in S,w' \in S' } \join(b,w,w')$
+% \end{itemize}
+% \end{definition}
+
+
+
+The above functions can be used to specify dynamic programming algorithms operating on $k$-instructive tree decompositions of graphs. The algorithm processes such a tree decomposition $\treedec = (\treeT,\lambda)$ from the leaves towards the root, assigning to each node $\nodep\in \nodes{\treeT}$ a finite subset of strings $\dynamization(\nodep)$ according to the following inductive process. 
+
+\begin{definition}[Dynamization]\label{Dynamization}
+$ $
+\begin{enumerate}
+\item If $\nodep$ is labeled $\leaflabel$ then $\dynamization(\nodep) = \leaf$%$\dynamization(\nodeu) = \emptyset$. 
+\item If $\nodep$ is an internal node of $\treedec$ with a unique child $\nodep'$, then 
+\begin{enumerate}
+    \item $\dynamization(\nodep) = \introvertex{\activelabelu}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\introvertexlabel{\activelabelu}$. 
+    \item $\dynamization(\nodep) = \forgetvertex{\activelabelu}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\forgetvertexlabel{\activelabelu}$.
+    \item $\dynamization(\nodep) = \introedge{\activelabelu}{\activelabelv}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\introedgelabel{\activelabelu}{\activelabelv}$. 
+\end{enumerate}
+\item If $\nodep$ is labeled $\joinlabel$ and has children $\nodep'$ and $\nodep''$, then $\dynamization(u) = \join(\activelabelsatnode{\nodep},\dynamization(\nodep'),\dynamization(\nodep''))$. 
+\end{enumerate}
+\end{definition}
+
+The DP-Core $\dpcore$ accepts a $k$-instructive tree decomposition  $\treedec$ if the set 
+$\dynamization(\rootfunction{\treedec})$ associated with the root node of $\treedec$ contains a final witness, 
+that is, a string $w$ such that $\final(w)=1$. The DP-Core $\dpcore$ is coherent if for 
+each graph $\graph$ of treewidth at most $k$, and each two $k$-instructive tree 
+decomposition $\treedec,\treedec'$ of $\graph$, $\dpcore$ accepts $\treedec$ if and only if 
+it accepts $\treedec'$. We say that a coherent DP-core $\dpcore$ computes a graph invariant 
+$\invariant$ if $\inv(\dynamization(\rootfunction{\treedec})) = \invariant(\graph)$ for each $k$-instructive tree decomposition $\treedec$ of $\graph$. 
+
+
+
+\paragraph*{Example: A DP-Core for Vertex Cover}
+\label{subsection:VC}
+Next, we define a witness for the {\sc Vertex Cover} DP-core. Such a witness at a node $\nodep$ of a k-instructive tree decomposition is a string of the form $ s\cdot t$ where $s$ is a binary string of length $|\activelabelsatnode{\nodep}|$ and represents a subset of active labels forming a partial solution, while $t$ is a number representing the size of the solution.\footnote{Number $t$ can further be encoded as a binary string and thus fully conform with the definition of our DP-core functions but for the sake of clarity of exposition we elect to represent it as a number.} We may refer to $s$ as the \textit{string component} and number $t$ as the \textit{size component} of the witness. The subset represented by $s$ depends on the set of labels $\activelabels \subseteq [k+1]$, that are active at a given node of the tree decomposition. More specifically, let $l_1 < ... < l_{|s|}, l_i \in \activelabels(\nodep)$ be the active labels at a given node $\nodep$. Then the set represented by $s$ is $Active(s) = \{l_j \;:\; s_j=1\}$. For instance, let
+$\activelabelsatnode{\nodep} = \{2,4,5\}$ be the set of active labels at node $p$, then $s=101$ represents the set $\{2,5\}$ while $s'=011$ represents the set $\{4,5\}$.  
+
+Given a label $\activelabelu \in [k+1]$ and set of labels $\activelabels \subseteq [k+1]$ we let $\activelabels[\activelabelu] = |\{\activelabelv < \activelabelu : \activelabelv \in \activelabels \}|+1$ denote the index $\activelabelu$ takes in $\activelabels \cup \activelabelu$ when this set is ordered in ascending order. 
+
+\begin{definition}[Vertex Cover DP-core] \label{VCDP-core}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels. The components of the {\sc Vertex Cover} DP-core are defined as follows:
+\begin{enumerate}
+
+\item \label{VCDP-coreLeaf}$\leaf = \{0\}$
+
+\item \label{VCDP-coreIntroVertex}$\introvertex{\activelabelu}(\activelabels,s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|} t)\\ = \{s_1\dots s_{\activelabels[\activelabelu]-1}\thickspace\textbf{x}\thickspace s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|} t | \textbf{x} \in \dbset{2}\}$
+
+\item \label{VCDP-coreForgetVertex}$\forgetvertex{\activelabelu}(\activelabels,s_1\negthickspace\dots\negthinspace s_{\activelabels[\activelabelu]\negthinspace-\negthinspace1}s_{\activelabels[\activelabelu]}s_{\activelabels[\activelabelu]\negthinspace+\negthinspace1}\negthickspace\dots\negthinspace s_{|\activelabels|} t) \\ = 
+\left\{\begin{array}{l}
+\{s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|} \tau | \tau = t\negthickspace+\negmedspace1\} \mbox{ if $s_{\activelabels[\activelabelu]} = 1$} \\
+\{s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|} t\} \mbox{ otherwise.} 
+\end{array}\right. $
+
+
+\item \label{VCDP-coreIntroEdge}$\introedge{\activelabelu}{\activelabelv}(\activelabels,st)\\ = \left\{\begin{array}{l}
+\emptyset \mbox{ if $ s_{\activelabels[\activelabelu]} = 0 \land s_{\activelabels[\activelabelv]} = 0 $} \\ 
+\{st\} \mbox{ otherwise.} 
+\end{array}\right. $
+
+
+\item \label{VCDP-coreJoin}$\join(\activelabels, s_1\cdot t_1,s_2\cdot t_2) \\= \left\{
+\begin{array}{l}
+\emptyset \mbox{ if $s_1\neq s_2$} \\ 
+\{s_1\tau | \tau = t_1 + t_2\} \mbox{ otherwise.} 
+\end{array}\right.$
+
+\end{enumerate}
+
+\end{definition}
+
+
+The operation $\leaf$ in the above DP-core for {\sc Vertex Cover} produces a witness consisting of a single-character string \texttt{0}, representing an empty solution of size 0.
+
+The operation $\introvertex{\activelabelu}$ generates two new strings by modifying the input string: one with a \texttt{0} and the other with a \texttt{1} inserted at the position corresponding to $\activelabels[\activelabelu]$, while shifting all subsequent characters one place to the right.
+
+The operation $\forgetvertex{\activelabelu}$ either:
+\begin{itemize}
+    \item Removes the symbol at $\activelabels[\activelabelu]$ and increments the solution size \(t\) by 1 if the symbol is \texttt{1}, or
+    \item Removes the symbol at index $\activelabels[\activelabelu]$ if the symbol is \texttt{0} leaving the size component unchanged.
+\end{itemize}
+
+The operation $\introedge{\activelabelu}{\activelabelv}$ returns the empty set if both symbols at positions $\activelabels[\activelabelu]$ and $\activelabels[\activelabelv]$ are \texttt{0}. Otherwise, it outputs the input string unchanged.
+
+Finally, the operation $\join$ returns the empty set if the two input strings differ in their first $|\activelabels|$ characters. Otherwise, it returns a witness with identical string component, with the size component updated to the sum of the two input sizes.
+
+
+\section{Formal Description and Proof of Correctness of SDP Algorithm}\label{app:ProofofSDP-core}
+
+\paragraph*{Main Lemma}
+
+The correctness of the symbolic vertex cover algorithm devised in Section \ref{Symbolic Vertex Cover (sketch)} follows immediately by the following lemma, which states an equivalence between the symbolic operations presented in Section \ref{Symbolic Vertex Cover (sketch)} and the components of the {\sc Vertex Cover} DP-core of definition \ref{VCDP-core}. More specifically, we show that each of these symbolic operations constructs an OBDD whose accepted language matches the set of witnesses generated by the corresponding DP-core component, for any given set of active labels $\activelabels \subseteq [k+1]$ associated with a node of a $k$-instructive tree decomposition.
+
+\begin{lemma}
+\label{lemma:mainLemma}
+    Given a set of active labels $\activelabels \subseteq [k+1]$ and OBDDs $\ODD$ and $\ODD'$ of length $|\activelabels|+1$, the following equivalences hold:
+\begin{enumerate}[label=\arabic*.,left=0pt,labelsep=2pt]
+\item \label{mainLeaf} $\leaf = \Lang(\symbleaf)$
+\item \label{mainIntroVertex} $\introvertex{\activelabelu}(\activelabels, \Lang(\ODD)) = \Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD))$
+\item \label{mainIntroEdge}$\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD)) = \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD))$
+\item \label{mainForgetVertex} $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD)) = \Lang(\symbforgetvertex{\activelabelu}(\activelabels,\ODD))$
+\item \label{mainJoin} $\join(\Lang(\ODD),\Lang(\ODD')) = \Lang(\symbjoin(\ODD,\ODD'))$
+\end{enumerate}
+\end{lemma}
+
+The proof of Lemma \ref{lemma:mainLemma} will be carried out in the following subsections. Each subsection will start with a formal description of each symbolic operation.
+
+
+\subsection{Leaf Nodes}
+
+% In this subsection, we prove point~(\ref{mainLeaf}) of
+% Lemma~\ref{lemma:mainLemma}, which states that the language of the OBDD $D$
+% produced by the symbolic operation $\symbleaf$ coincides with the set $\leaf$
+% specified by the {\sc Vertex Cover} DP-core.
+
+Formally, we define $\symbleaf$ to be an OBDD consisting of a single layer~$\B$.
+The layer~$\B$ contains a single transition from the initial state to the accept
+state labeled with the value~$0$. All other transitions labeled with a value in
+$\dbset{|V|} \setminus \{0\}$ lead to the reject state. That is,
+\[
+\B
+= \{(0,0,\accept)\}
+\;\cup\;
+\{(0,\ell,\reject) \mid \ell \in \dbset{|V|} \setminus \{0\}\}.
+\]
+
+
+% \subsection{Leaf Nodes}
+
+% In this subsection we prove point (\ref{mainLeaf}) of Lemma \ref{lemma:mainLemma} stating that the language of OBDD $D$ produced by symbolic operation $\symbleaf$ is equal to the set $\leaf$ specified in the {\sc Vertex Cover} DP-core.
+
+% Formally, we define $\symbleaf$ to be an OBDD consisting of a single layer $\B$. Layer $\B$ consists of a single transition from the initial state to the accept state labeled with value $0$, while all other transitions labeled with a value from $\dbset{|V|} \setminus \{0\}$ lead to the reject state: $B = \{(0,0,\accept)\} \cup \{(0,l,\reject): l \in \dbset{|V|}\}$.
+
+
+\begin{lemma}
+\label{lemma:SymbolicLeaf}
+    $\leaf = \Lang(\symbleaf)$. 
+\end{lemma}
+\begin{proof}
+    OBDD $\symbleaf = \ODD$ only accepts the string $0$ by construction/definition so $\Lang(\symbleaf) = \{0\}$. Meanwhile, since $\leaf =  \{0\}$ also by definition, then $\leaf = \Lang(\symbleaf)$.
+\end{proof}
+
+
+\subsection{Intro Vertex Nodes}
+
+Given an input OBDD
+$\ODD = \B_1 \cdots \B_{\activelabels[u]-1}\,
+\B_{\activelabels[u]}\cdots \B_{|\activelabels|+1}$,
+the operation $\symbintrovertex{u}$ produces the OBDD
+$\ODD' = \B_1 \cdots \B_{\activelabels[u]-1}\,
+\B'\,\B_{\activelabels[u]}\cdots \B_{|\activelabels|+1}$,
+where a new layer $\B'$ is inserted at position $\activelabels[u]$.
+
+The layer $\B'$ reads symbols $0$ and $1$ indiscriminately and does not impose
+any additional constraints. Formally, $\B'$ has
+$|\Dom(\B_{\activelabels[u]})|$ left states and the same number of right states,
+and for each state $i \in \Dom(\B_{\activelabels[u]})$ it contains transitions
+labeled $0$ and $1$ from $i$ to itself. That is,
+\[
+\B' \;=\; \{(i,\ell,i) \mid \ell \in \{0,1\},\ i \in \Dom(\B_{\activelabels[u]})\}.
+\]
+
+
+% \subsection{Intro Vertex Nodes}
+
+% Given input OBDD $\ODD = \B_1 \dots \B_{\activelabels[\activelabelu]-1} \B_{\activelabels[\activelabelu]} \dots \B_{|\activelabels|+1}$ operation $\symbintrovertex{\activelabelu}$ outputs OBDD $\ODD' = \B_1 \dots \B_{\activelabels[\activelabelu]-1} \B'\B_{\activelabels[\activelabelu]} \dots \B_{|\activelabels|+1}$, where layer a layer $\B'$ reading symbols $0$ and $1$ indiscriminately is inserted at position $\activelabels[\activelabelu]$. more formally, we define layer $\B'$ to have $|\Dom(\B_{\activelabels[\activelabelu]})|$ many left and right states, and two transitions labeled $0$ and $1$ respectively between each pair of states from $\Dom(\B')$ and $\im(\B')$ with matching indices. Formally, $\B' = \{(i,l,i):l \in \dbset{2}, i \in \Dom(\B_{\activelabels[\activelabelu]})\}$.
+
+Next we show that symbolic construction, $\symbintrovertex{\activelabelu}$, exactly captures the change in the witness set prescribed by the corresponding operation $\introvertex{\activelabelu}$, as stated by point (\ref{mainIntroVertex}) of Lemma~\ref{lemma:mainLemma}.
+
+\begin{lemma}
+\label{lemma:IntroVertexAppendix}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels, $\ODD$ an OBDD of length $|\activelabels|+1$ and $\activelabelu$ a label in $[k+1]\negthinspace\setminus \negthinspace\activelabels$. Then  $\introvertex{\activelabelu}(\activelabels, \Lang(\ODD))  = \Lang(\symbintrovertex{\activelabelu}(\activelabels, \ODD))$.
+\end{lemma}
+\begin{proof}
+Let $\ODD = \B_1\dots B_{|\activelabels|+1}$ and let $\symbintrovertex{\activelabelu}(\activelabels, \ODD)= \ODD' = \B'_1\dots B'_{|\activelabels|+1}$.
+We choose arbitrarily a witness $\sigma\tau$ from $\introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ and show that it is accepted by $\ODD'$. 
+
+By point (\ref{VCDP-coreIntroVertex}) of Definition \ref{VCDP-core}, we may assume that $\sigma\tau$, is in the image of $\introvertex{\activelabelu}(\activelabels, st)$ for some witness $st$ with identical size component ($t=\tau$) and that $st$ is accepted by OBDD $\ODD$. Moreover, letting $s = s_1\dots s_{|\activelabels| +1}$ and $\sigma = \sigma_1 \dots \sigma_{|\activelabels|+2}$, we know that $s_1 = \sigma_1, \ldots, s_{\activelabels[\activelabelu]-1} = \sigma_{\activelabels[\activelabelu]-1}, s_{\activelabels[\activelabelu]} = \sigma_{\activelabels[\activelabelu]+1}, \ldots, s_{|\activelabels| + 1} = \sigma_{|\activelabels|+2}$ and we may assume without loss of generality that $\sigma_{\activelabels[\activelabelu]} = 1$. Since $st$ is accepted by $\ODD$ we know that there exists a path $p_1$, starting from the initial state in $\B_1$ and ending in state $q$ in the image of $\B_{\activelabels[\activelabelu]-1}$ reading string $s_1\dots s_{\activelabels[\activelabelu]-1}$. Likewise, there exists a path $p_2$, starting at state $q$ in the domain of $\B_{\activelabels[\activelabelu]}$ and ending at the accept state of final layer $\B_{|\activelabels|+1}$ reading string $s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|}t$. 
+Since by definition  $\B'_i =\B_i$ for $i \in [\activelabels[\activelabelu]-1]$ and that $ \B'_{j+1}=\B_j$ for $j \in \{\activelabels[\activelabelu], \ldots, |\activelabels|+1\}$, we know that path $p_1$ exists also in $\ODD'$ from layer $\B'_1$ to layer $\B'_{\activelabels[\activelabelu] - 1}$ and path $p_2$ exists in $\ODD'$ from layer $\B'_{\activelabels[\activelabelu]+1}$ to layer $\B'_{|\activelabels|+2}$. It remains only to show that transition $(q,1,q)$ exists in $\B'_{\activelabels[\activelabelu]}$ which is the case by definition and we conclude that witness $\sigma\tau$ belongs to the language of $\ODD'$. Since $\sigma\tau$ was chosen arbitrarily, we conclude that $\introvertex{\activelabelu}(\activelabels, \Lang(\ODD))\subseteq \Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD))$.
+
+Next we chose arbitrarily a string $st$ from $\Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD))$ and show that $st \in \introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$.
+
+Since $st$ is accepted by OBDD $\ODD' = \symbintrovertex{\activelabelu}(\activelabels,\ODD)$, there exists a path $p_1$ in $\ODD'$ from layer $\B'_1$ to layer $\B'_{\activelabels[\activelabelu]-1}$ starting from the initial state and ending at some state $q$ reading string $s_1\dots s_{\activelabels[\activelabelu]-1}$. Further, there exists a path $p_2$ in $\ODD'$ from layer $\B'_{\activelabels[\activelabelu]+1}$ to final layer $\B'_{|\activelabels| + 2}$ starting from the state $q$ (since all transitions in $\B'_{\activelabels[\activelabelu]}$ start and end at states of the same label) and ending at the final state reading $s_{\activelabels[\activelabelu] + 1} \dots s_{|\activelabels|+1}t$.
+Hence contracted witness $\sigma\tau= s_1 \dots s_{\activelabels[\activelabelu] - 1}s_{\activelabels[\activelabelu] + 1} \dots s_{|\activelabels|+1}t$ is accepted by OBDD $\ODD$. By definition we know that $\introvertex{\activelabelu}(\activelabels, \sigma\tau)$ contains (both) expanded witnesses where a digit $s^* \in \{0,1\}$ is inserted at position $\activelabels[\activelabelu]$ so $st \in \introvertex{\activelabelu}(\activelabels, \sigma\tau)$ and $st \in \introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$. Since $st$ was chosen arbitrarily, we conclude that $\Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD)) \subseteq \introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$.
+ 
+
+\end{proof}
+
+\subsection{Intro Edge Nodes}
+
+We define the OBDD $\ODD^{\{\activelabelu,\activelabelv\}}
+= \B_1 \dots \B_{|\activelabels|+1}$ as follows.
+The first $\activelabels[u]-1$ layers each consist of a single left state and a
+single right state, with two transitions labeled $0$ and $1$, respectively:
+\[
+\B_i = \{(0,0,0),(0,1,0)\}
+\quad\text{for } i \in [\activelabels[u]-1].
+\]
+
+At layer $\activelabels[u]$, the OBDD branches, with one transition reaching
+state~$0$ upon reading~$0$ and another reaching state~$1$ upon reading~$1$:
+\[
+\B_{\activelabels[u]} = \{(0,0,0),(0,1,1)\}.
+\]
+
+Subsequent layers up to layer $\activelabels[v]-1$ consist of two left states and
+two right states, with transitions labeled $0$ and $1$ between states with
+matching indices:
+\[
+\B_i = \{(0,0,0),(0,1,0),(1,0,1),(1,1,1)\}
+\quad\text{for }
+i \in \{\activelabels[u]+1,\ldots,\activelabels[v]-1\}.
+\]
+
+At layer $\activelabels[v]$, the transitions enforce the constraint that strings
+reading the value~$0$ at both positions $\activelabels[u]$ and
+$\activelabels[v]$ are rejected. Concretely, this layer contains a transition
+labeled~$0$ from left state~$0$ to right state~$0$, causing rejection, a
+transition labeled~$1$ from left state~$0$ to right state~$1$, and transitions
+labeled~$0$ and~$1$ from left state~$1$ to right state~$1$:
+\[
+\B_{\activelabels[v]}
+= \{(0,0,0),(0,1,1),(1,0,1),(1,1,1)\}.
+\]
+
+All subsequent layers up to the $|\activelabels|$-th layer again consist of two
+left states and two right states, with transitions labeled $0$ and $1$ between
+states with matching indices, and are defined analogously. Finally, the
+$(|\activelabels|+1)$-st layer consists of two left states and transitions labeled
+$i$ for each $i \in \dbset{|V|}$, mapping left state~$0$ to the reject state and
+left state~$1$ to the accept state.
+
+We now define the symbolic operation for introducing an edge. The OBDD
+$\ODD^{\{\activelabelu,\activelabelv\}}$ constructed above serves as a filtering
+OBDD enforcing the constraint that the edge $\{\activelabelu,\activelabelv\}$ is
+covered.
+
+Consequently, given an OBDD $\ODD$ representing a set of witnesses, the symbolic
+operation $\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD)$
+outputs the intersection of $\ODD$ with $\ODD^{\{\activelabelu,\activelabelv\}}$.
+The OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ accepts all binary strings of
+length $|\activelabels|+1$ whose values at positions
+$\activelabels[u]$ and $\activelabels[v]$ are not both~$0$, that is, all strings
+that assign value~$1$ to at least one of the two vertices incident to the edge.
+
+Formally, the intersection $\ODD \cap \ODD^{\{\activelabelu,\activelabelv\}}$
+accepts exactly those strings accepted by $\ODD$, except for those assigning the
+value~$0$ at both positions $\activelabels[u]$ and $\activelabels[v]$. Finally,
+we minimize the resulting OBDD and define
+\[
+\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD)
+\;=\;
+\minODD\!\left(\ODD \cap \ODD^{\{\activelabelu,\activelabelv\}}\right),
+\]
+where $\minODD$ denotes the operation returning a minimum-width OBDD recognizing
+the same language (see Theorem~\ref{theorem:Minimize}).
+
+
+
+% \subsection{Intro Edge Nodes}
+
+% We define OBDD $\ODD^{\{\activelabelu,\activelabelv\}} = \B_1\dots \B_{|\activelabels|+1}$ formally as follows. The first $\activelabels[\activelabelu] -1$ layers each consist of a single left state, a single right state, and two transitions labeled $0$ and $1$ respectively; $\B_i = \{(0,0,0), (0,1,0)\}$ for $i \in [\activelabels[\activelabelu] -1]$. At layer $\activelabels[\activelabelu]$, the OBDD forks, with one transition reaching state $0$ upon reading $0$ and another transition reaching state $1$ upon reading $1$; $\B_{\activelabels[\activelabelu]} = \{(0,0,0),(0,1,1)\}$. Subsequent layers up to layer $\activelabels[\activelabelv]-1$ consist of two left states and two right states, with transitions labeled $0$ and $1$ between states with matching indices; $\B_i = \{(0,0,0),(0,1,0),(1,0,1),(1,1,1)\}$ for $i \in \{\activelabels[\activelabelu]+1,\ldots,\activelabels[\activelabelv]-1\}$. At layer $\activelabels[\activelabelv]$, the transitions ensure that strings with $0$ at both positions are rejected. Specifically, layer $\activelabels[\activelabelv]$ contains a transition labeled $0$ form left state indexed $0$ to right state indexed $0$ (witnesses reading $0$ with this transition will go on to be rejected) as well as a transition labeled $1$ from left state labeled $0$ to right state labeled $1$ and transitions labeled $0$ and $1$ from left state labeled $1$ to right state labeled $1$; $\B_{\activelabels[\activelabelv]} = \{(0,0,0),(0,1,1),(1,0,1),(1,1,1)\}$.
+%  Subsequent layers up to the $|\activelabels|$-th again consist of two left states and two right states, with transitions labeled $0$ and $1$ between states with matching indices; $\B_i = \{(0,0,0),(0,1,0),(1,0,1),(1,1,1)\}$. Finally, the $|\activelabels|+1$-th layer consists of two left states and a transition labeled $i$ for each $i\in \dbset{|V|}$ from left state indexed $0$ to the reject state, and left state indexed $1$ to the accept state.
+
+ % We now turn to the step where an edge is introduced between two vertices, thus requiring that at least one of these vertices is in the cover. The following lemma is a restatement of point (\ref{mainIntroEdge}) of Lemma \ref{lemma:mainLemma} asserting that the symbolic construction $\symbintroedge{\activelabelu}{\activelabelv}$ precisely matches the change in the witness set dictated by $\introedge{\activelabelu}{\activelabelv}$.
+
+\begin{lemma}
+\label{lemma:SymbolicEdgeAppendix}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels, $\ODD$ an OBDD of length $|\activelabels|+1$ and $\activelabelu, \activelabelv$ labels in $\activelabels$. Then  $\introedge{\activelabelu}{\activelabelv}(\activelabels, \Lang(\ODD))  = \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels, \ODD))$.
+\end{lemma}
+
+\begin{proof}
+    We choose arbitrarily a  witness $\sigma\tau \in \introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$ and show that it is accepted by OBDD $\ODD^* = \symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD)$.
+
+    By definition, $\ODD^* = \ODD \cap \ODD^{\{\activelabelu,\activelabelv\}}$ as described in section \ref{section:IntroEdge}. By definition, string $\sigma\tau$ is accepted by OBDD $\ODD$ so we need only show that $\sigma\tau = \sigma_1\dots \sigma_{|\activelabels|}\tau$ is accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}} = \B_1\dots \B_{|\activelabels|+1}$. Since layer $\B_i = \{(0,0,0), (0,1,0)\}$ for $i \in [\activelabels[\activelabelu]-1]$ we know there exists a path $p_1$ in $\ODD^{\{\activelabelu,\activelabelv\}}$ from the initial state in layer $\B_1$ to state $q = 0$ in the image of layer $\B_{\activelabels[\activelabelu]-1}$ reading string $\sigma_1\dots \sigma_{\activelabels[\activelabelu]-1}$. Next we consider the two cases; case 1, where $\sigma_{\activelabels[\activelabelu]} = 0$ and case 2, where $\sigma_{\activelabels[\activelabelu]} = 1$.
+
+    \begin{itemize}
+        \item Case 1: There exists a path $p_2$ from state $0$ in the domain of layer $\B_{\activelabels[\activelabelu]}$ to state $0$ in the image of layer $\B_{\activelabels[\activelabelv]-1}$ reading string $\sigma_{\activelabels[\activelabelu]}\dots \sigma_{\activelabels[\activelabelv]-1}$. Since $\sigma\tau \in \introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$ we know that $\sigma_{\activelabels[\activelabelv]} = 1$. Therefore, OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ reads $\sigma_{\activelabels[\activelabelv]}$ with transition $(0,1,1)$ in layer $\B_{\activelabels[\activelabelv]}$. Finally, there exists a path $p_3$ reading $\sigma_{\activelabels[\activelabelv] + 1}\dots \sigma_{|\activelabels|}\tau$, starting at state $q=1$ of the domain of layer $\B_{\activelabels[\activelabelv] + 1}$ and ending at the final state. Hence, $\sigma\tau$ is accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$.
+        
+        \item Case 2: There exists a path $p_2$ from state $0$ in the domain of layer $\B_{\activelabels[\activelabelu]}$ to state $1$ in the image of layer $\B_{\activelabels[\activelabelv]-1}$ reading string $\sigma_{\activelabels[\activelabelu]}\dots \sigma_{\activelabels[\activelabelv]-1}$. At layer $\B_{\activelabels[\activelabelv]}$ OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ reads $\sigma_{\activelabels[\activelabelv]}$ with either transition $(1,0,1)$ or $(1,1,1)$. Finally, there exists a path $p_3$ reading  $\sigma_{\activelabels[\activelabelv] + 1}\dots \sigma_{|\activelabels|}t$, starting at state $q=1$ of the domain of layer $\B_{\activelabels[\activelabelv] + 1}$ and ending at the final state. Hence, $\sigma\tau$ is accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$
+    \end{itemize}
+
+    Since $\sigma\tau$ is accepted by both OBDD $\ODD$ and OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$, it follows that $\sigma\tau$ is accepted by OBDD $\ODD^*$. Since $\sigma\tau$ was chosen arbitrarily we conclude that $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD)) \subseteq \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD))$.
+
+    Next, we choose arbitrarily a string $st$ accepted by OBDD $\ODD^*$ and show that it belongs to the set $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$.
+
+    Since $st$ is accepted by OBDD $\ODD^* = \ODD \cap \ODD^{\{\activelabelu,\activelabelv\}}$, we know that it is also accepted by OBDD $\ODD$ and hence belongs to the language $\Lang(\ODD)$. Following point (\ref{VCDP-coreIntroEdge}) of  definition \ref{VCDP-core} for $\introedge{\activelabelu}{\activelabelv}$, we need only check that $st$ tales value $1$ at either $s_{\activelabels[\activelabelu]}$ or $s_{\activelabels[\activelabelv]}$. Suppose contrarily that $s_{\activelabels[\activelabelu]} = s_{\activelabels[\activelabelv]} = 0$. Then string $st$ would not have been accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ as it cannot be accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$. OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ would namely read $s_{\activelabels[\activelabelu]}$ with transition $(0,0,0)$ at layer $\B_{\activelabels[\activelabelu]}$. Consequently, OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ would read up to $s_{\activelabels[\activelabelv] - 1}$ taking appropriately transitions $(0,0,0)$ or $(0,1,0)$ of layers $\B_i, i \in \{\activelabels[\activelabelu]+1,\ldots,\activelabels[\activelabelv]-1\}$ and reading $s_{\activelabels[\activelabelv]}$ with transition $(0,0,0)$ at layer $\B_{\activelabels[\activelabelv]}$. Finally, $s_{\activelabels[\activelabelv]+1}\dots s_{|\activelabels|}t$ is read by path $p$ starting at state $q=0$ in the domain of layer $\B_{\activelabels[\activelabelv]+1}$ and ending in the reject state of the final layer. This is a contradiction to the assumption that $st$ is accepted by OBDD $\ODD^*$ and therefore we may conclude that string $st$ takes value $1$ in at least one of positions $s_{\activelabels[\activelabelu]}$ or $s_{\activelabels[\activelabelv]}$ and belongs to set $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$. Since $st$ was chosen arbitrarily we conclude that $\Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD)) \subseteq \introedge{\activelabelu}{\activelabelv}(\activelabels, \Lang(\ODD))$ and therefore $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD)) = \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD))$.
+    
+\end{proof}
+
+\subsection{Forget Vertex Nodes} \label{subsec:FrgProof}
+
+\paragraph*{Forget Vertex}
+
+Let $\ODD = \B_1 \cdots \B_{|\activelabels|+1}$ be an OBDD representing a set of
+witnesses for the {\sc Vertex Cover} DP-core with active labels
+$\activelabels$, and let $u$ be a label to be forgotten.
+
+We define the symbolic operation $\symbforgetvertex{u}(\activelabels,\ODD)$ via
+two intermediate OBDDs,
+$\ODD^{\activelabels[u]=0}$ and $\ODD^{\activelabels[u]=1}$, which correspond to
+witnesses assigning value $0$ and $1$, respectively, at position
+$\activelabels[u]$.
+
+\medskip
+\noindent\textbf{Construction of $\ODD^{\activelabels[u]=0}$.}
+The OBDD $\ODD^{\activelabels[u]=0} = \B'_1 \cdots \B'_{|\activelabels|+1}$ is
+defined as follows.
+For all $i < \activelabels[u]$, let $\B'_i = \B_i$.
+At layer $\activelabels[u]$, define
+\[
+\B'_{\activelabels[u]}
+=
+\bigl(\B_{\activelabels[u]} \setminus
+\{(i,1,j)\}\bigr)
+\;\cup\;
+\{(i,1,|\im(\B_{\activelabels[u]})|) : i \in \Dom(\B_{\activelabels[u]})\},
+\]
+redirecting all transitions labeled~$1$ to a new rejecting state.
+For all layers $i \in \{\activelabels[u]+1,\dots,|\activelabels|\}$, extend
+$\B_i$ by adding one new left and one new right state with transitions labeled
+$0$ and $1$ between them.
+At the final layer $\B_{|\activelabels|+1}$, add transitions from the new left
+state to the reject state labeled by all values in $\dbset{|V|}$.
+
+\medskip
+\noindent\textbf{Construction of $\ODD^{\activelabels[u]=1}$.}
+The OBDD $\ODD^{\activelabels[u]=1}$ is defined analogously, except that at layer
+$\activelabels[u]$ all transitions labeled~$0$ are redirected to a new rejecting
+state, and at the final layer the size labels of transitions incident to the
+accept state are incremented by~$1$.
+
+\medskip
+\noindent\textbf{Combination and contraction.}
+We define
+$\ODD^\cup = \ODD^{\activelabels[u]=0} \;\cup\; \ODD^{\activelabels[u]=1}$.
+From $\ODD^\cup$, we remove layer $\B_{\activelabels[u]}$ by contracting it with
+layer $\B_{\activelabels[u]-1}$, defining a new layer
+\[
+\B^*_{\activelabels[u]-1}
+=
+\{(i,\ell,j) \mid
+(i,\ell,h) \in \B_{\activelabels[u]-1},
+(h,\ell',j) \in \B_{\activelabels[u]}\}.
+\]
+All subsequent layers are shifted accordingly.
+
+Finally, we define
+$\symbforgetvertex{u}(\activelabels,\ODD)
+=
+\minODD(\ODD^\cup)$,
+where $\minODD$ denotes the minimization operation preserving the recognized
+language (see Theorem~\ref{theorem:Minimize}).
+
+
+
+% Next, we examine the operation that removes an already introduced vertex from the set of active labels. The following lemma restates point~(\ref{mainForgetVertex}) of Lemma~\ref{lemma:mainLemma}, showing that the symbolic construction $\symbforgetvertex{\activelabelu}$ exactly reflects the adjustment to the witness set prescribed by $\forgetvertex{\activelabelu}$.
+
+\begin{lemma}
+\label{lemma:SymbolicForgetVertexAppendix}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels, $\ODD$ an OBDD of length $|\activelabels|+1$ and $\activelabelu$ a label in $\activelabels$. Then  $\forgetvertex{\activelabelu}(\activelabels, \Lang(\ODD))  = \Lang(\symbforgetvertex{\activelabelu}(\activelabels, \ODD))$.
+\end{lemma}
+
+\begin{proof}
+    We choose arbitrarily a  witness $\sigma\tau\in \forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ and show that it is accepted by OBDD $\ODD^* = \symbforgetvertex{\activelabelu}(\activelabels,\ODD)$.
+
+    Since $\sigma\tau \in \forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ we know that for some $st$ accepted by $\ODD = \B_1\dots \B_{|\activelabels|+1}$ it is the case that $\sigma\tau \in \forgetvertex{\activelabelu}(\activelabels,st)$. Moreover, $st = s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|}t$ where removing $s_{\activelabels[\activelabelu]}$ results in string component $\sigma$, i.e. $s_1\dots s_{\activelabels[\activelabelu]-1} s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|-1} = \sigma$. Assume without loss of generality that $s_{\activelabels[\activelabelu]} = 1$ and hence $t = \tau - s_{\activelabels[\activelabelu]} = \tau - 1$ by the definition of $\forgetvertex{\activelabelu}$. We first show that intermediate witness $s\tau$ is accepted by $\ODD^{\activelabels[\activelabelu]=1} = \B_1'\dots\B_{|\activelabels|+1}'$. By definition the first $\activelabels[\activelabelu] -1$ layers of $\ODD$ and $\ODD^{\activelabels[\activelabelu]=1}$ are identical and therefore there exists a path $p_1$ in $\ODD^{\activelabels[\activelabelu]=1}$ from the initial state in layer $\B'_1$ to some right state $q$ of $\B_{\activelabels[\activelabelu]-1}'$ reading string $s_1\dots s_{\activelabels[\activelabelu]-1}$. 
+    By definition, all transitions labeled $1$ in $\B_{\activelabels[\activelabelu]}$ exist also in layer $\B_{\activelabels[\activelabelu]}'$ and so $s_{\activelabels[\activelabelu]}$ is read at this layer. Further, there exists a path $p_2$ reading $s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|}$ from layer $\B_{\activelabels[\activelabelu]+1}'$ to layer $\B_{|\activelabels|}'$ ending at some state $p$, since by definition $\B_i \subseteq \B_i'$ for $i \in \{\activelabels[\activelabelu]+1,\ldots,|\activelabels|\}$. Finally, since there necessarily exists some transition $(p,t,1)$ in $\B_{|\activelabels|+1}$, transition $(p,\tau,1)$ exists in $\B_{|\activelabelsatnode{\nodep}|+1}'$ by definition. Hence, $s\tau$ is accepted by $\ODD^{\activelabels[\activelabelu]=1}$. Contraction of OBDD $\ODD^{\activelabels[\activelabelu]=1} \cup \ODD^{\activelabels[\activelabelu]=0}$, $\ODD^*$ preserves paths $p_1$ and $p_2$ and so reads string $s_1\dots s_{\activelabels[\activelabelu]-1} s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|-1} = \sigma$ and consequently accepts witness $\sigma\tau$. A corollary argument holds for the case of $s_{\activelabels[\activelabelu]} = 0$. Since $\sigma$ was chosen arbitrarily we conclude that $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD)) \subseteq \Lang(\symbforgetvertex{\activelabelu}(\activelabels,\ODD))$.
+
+    Next we choose arbitrarily a witness $st$ accepted by OBDD $\ODD^* = \symbforgetvertex{\activelabelu}(\activelabels,\ODD)$ and show that it is in the language $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$. 
+
+    %By definition there exists some witness $\sigma t = \sigma_1\dots\sigma_{\activelabels[\activelabelu]-1}\sigma_{\activelabels[\activelabelu]}\sigma_{\activelabels[\activelabelu]+1}\dots\sigma_{|\activelabels|}t$ where $ \sigma_1\dots\sigma_{\activelabels[\activelabelu]-1}\sigma_{\activelabels[\activelabelu]+1}\dots\sigma_{|\activelabels|}=s$ and $\sigma t$ is accepted by $\ODD^{\activelabels[\activelabelu]=1} \cup \ODD^{\activelabels[\activelabelu]=0}$.
+
+    Let witness $st = s_1\dots s_{|\activelabels|-1}t$ and $\ODD^* = B_1^*\dots \B_{|\activelabels|}^*$. 
+    By assumption there exists paths $p_1$ and $p_2$ in $\ODD^*$ from the initial state in layer $\B_1$ to a right state $q$ in $\B_{\activelabels[\activelabelu]-2}$ and from a left state $q'$ in $\B_{\activelabels[\activelabelu]+1}$ to the final state in $\B_{|\activelabels|}$ reading $s_1\dots s_{\activelabels[\activelabelu]-2}$ and $ s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|-1}t$ respectively. Since by definition the first $\activelabels[\activelabelu]-2$ layers of $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$ are identical a those of $\ODD^*$, path $p_1$ exists in $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$. Also, since by definition layers $\B_{\activelabels[\activelabelu]+1}$ to $\B_{|\activelabels|+1}$ are identical to layers $\B_{\activelabels[\activelabelu]}^*$ to $\B_{|\activelabels|}$ path $p_2$ exists in $\ODD^*$ as well. Since $st$ is accepted by $\ODD^*$ we know that there must exist a transition $(q, l, q')$ for $l\in \{0,1\}$ in Layer $\B_{\activelabels[\activelabelu]-1}^*$. By the construction of $\ODD^*$ there mus exist a path $p_3$ from left state $q$ in $\B_{\activelabels[\activelabelu]-1}$ to right state $q'$ in $\B_{\activelabels[\activelabelu]}$. Path $p_1, p_3, p_2$ in $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$ therefore accepts witness $\sigma t $ where $\sigma = = s_1\dots s_{\activelabels[\activelabelu]-1}l s_{\activelabels[\activelabelu]-1}\dots s_{|\activelabels|}$. Consequently, by the construction of $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$, witness $\sigma\tau$ where $\tau = t-l$ is accepted by input OBDD $\ODD$. Hence by point (\ref{VCDP-coreForgetVertex}) of Definition \ref{VCDP-core} $st$ is in $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$.
+    %By lemma \ref{ForgetVertexLemma} $s't = s_1'\dots s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)-1}'s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)'} s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)+1}'\dots s_{|\activelabelsatnode{\nodep}|}t$ is accepted by $\ODD_0 \cup \ODD_1$ where $s_1'\dots s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)-1}' s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)+1}'\dots s_{|\activelabelsatnode{\nodep}|}t = st$. 
+    %Assume without loss of generality that $s_{\activelabels[\activelabelu]} = 1$ and so $\sigma t$ is accepted by $\ODD^{\activelabels[\activelabelu]=1}$. By definition the first $\activelabels[\activelabelu]-1$ layers of $\ODD$ and $\ODD^{\activelabels[\activelabelu]=1}$ are identical and therefore there exists a path $p_1$ in $\ODD^{\activelabels[\activelabelu]=1}$ from the initial state in layer $\B_1'$ to some state $q$ in the image of $\B_{\activelabels[\activelabelu]-1}$ reading string $\sigma_1\dots s_{\activelabels[\activelabelu]-1}'$. By definition, all transitions labeled $1$ in $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}$ exist also in layer $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}'$ and vice versa so $s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}'$ is read at layer $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}$. Further, there exists a path $p_2$ from layer $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)+1}'$ to layer $\B_{|\activelabelsatnode{\nodep}|}'$ ending in at some state $p$ and this path in particular does not include a state $|\Dom(\B_i)|$ for $i \in \{{\pi_\activelabelsatnode{\nodep}(\activelabelu)}+1,\ldots,|\activelabelsatnode{\nodep}|\}$ (otherwise $s't$ would go on to be rejected). By definition, this path therefore uses only transitions existing in $\B_i$  for $i \in \{{\pi_\activelabelsatnode{\nodep}(\activelabelu)}+1,\ldots,|\activelabelsatnode{\nodep}|\}$. Finally, since there necessarily exists some transition $(p,t,a)$ in $\B_{|\activelabelsatnode{\nodep}|+1}'$, transition $(p,t',a)$ necessarily must exists in $\B_{|\activelabelsatnode{\nodep}|+1}$ by definition. Hence, $s't'$ is accepted by $\ODD$ and therefore $st$ is in the language of $\forgetvertex{\activelabelu}(\Lang(\ODD))$ by the definition of $\forgetvertex{\activelabelu}(s't')$.
+    Since $st$ was chosen arbitrarily we conclude that $\Lang(\symbforgetvertex{\activelabelu}(\activelabels,\ODD)) \subseteq \forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ and therefore $\forgetvertex{\activelabelu}(\activelabels, \Lang(\ODD)) = \Lang(\symbforgetvertex{\activelabelu}(\activelabels, \ODD))$.
+\end{proof}
+
+
+
+
+\subsection{Join Nodes}
+
+Let $\ODD_1$ and $\ODD_2$ be OBDDs representing witness sets for the same set of
+active labels $\activelabels$. In the {\sc Vertex Cover} DP-core, the join
+operation combines two local witnesses with identical string components by
+summing their size components.
+
+We define the symbolic join operation
+$\symbjoin(\ODD_1,\ODD_2)$ using two intermediate OBDDs,
+$\ODD^{\scriptcap}$ and $\ODD^{\scriptcup}$.
+
+\medskip
+\noindent\textbf{Construction of $\ODD^{\scriptcap}$.}
+Let $\ODD_1 \cap \ODD_2 = \B_1 \cdots \B_{|\activelabels|+1}$ be the intersection
+OBDD, which accepts exactly those witnesses with identical string and size
+components in both $\ODD_1$ and $\ODD_2$.
+We define $\ODD^{\scriptcap} = \B_1^{\scriptcap} \cdots
+\B_{|\activelabels|+1}^{\scriptcap}$ by setting
+$\B_i^{\scriptcap} = \B_i$ for all $i \in [|\activelabels|]$ and modifying the
+final layer as follows:
+\[
+\B_{|\activelabels|+1}^{\scriptcap}
+=
+\{(i,2\cdot t,a) : (i,t,a) \in \B_{|\activelabels|+1}\}
+\;\cup\;
+\{(i,t,r) : (i,t,r) \in \B_{|\activelabels|+1}\}.
+\]
+Thus, witnesses accepted by $\ODD_1 \cap \ODD_2$ have their size components
+doubled.
+
+\medskip
+\noindent\textbf{Construction of $\ODD^{\scriptcup}$.}
+Let $\ODD_1 \cup \ODD_2 = \B_1 \cdots \B_{|\activelabels|+1}$ be the union OBDD.
+We define $\ODD^{\scriptcup} = \B_1^{\scriptcup} \cdots
+\B_{|\activelabels|+1}^{\scriptcup}$ by setting
+$\B_i^{\scriptcup} = \B_i$ for all $i \in [|\activelabels|]$ and modifying the
+final layer as follows.
+
+For each left state $i$, if there exist transitions $(i,t_1,a)$ and $(i,t_2,a)$
+with $t_1 \neq t_2$, we replace them by a single transition
+$(i,t_1+t_2,a)$. All accepting transitions that do not participate in such a
+pair are redirected to the reject state. Formally, the final layer consists of
+\[
+\B_{|\activelabels|+1}^{\scriptcup}
+=
+\{(i,t_1+t_2,a) : (i,t_1,a),(i,t_2,a)\in \B_{|\activelabels|+1},\ t_1\neq t_2\}
+\;\cup\;
+\{(i,t,r) : i \in \Dom(\B_{|\activelabels|+1}),\ t \in \dbset{|V|}\}.
+\]
+
+\medskip
+\noindent\textbf{Definition of the join operation.}
+Finally, we define
+$\symbjoin(\ODD_1,\ODD_2)
+=
+\minODD\!\left(\ODD^{\scriptcap} \cup \ODD^{\scriptcup}\right)$,
+where $\minODD$ denotes the minimization operation producing a minimum-width
+OBDD recognizing the same language.
+
+
+% Finally, we address the operation that combines the witness sets of two subproblems under a tree decomposition node. The following lemma is a restatement of point~(\ref{mainJoin}) of Lemma~\ref{lemma:mainLemma}, showing how the symbolic construction $\symbjoin$ exactly encodes the union of witnesses required by $\join$.
+
+
+%\begin{lemma}\label{UniquePath}
+%    Every path from the initial state of $\ODD^{\scriptcup}$ to some state $q$ in the image of layer %$\B_{|\activelabelsatnode{\nodep}|}^\scriptcup$ reads a unique string.
+%\end{lemma}
+
+
+
+\begin{lemma}
+\label{lemma:SymbolicJoin}
+Given length $l$ OBDDs $\ODD_1$ and $\ODD_2$, $\join(\Lang(\ODD_1),\Lang(\ODD_2)) = \Lang(\symbjoin(\ODD_1,\ODD_2))$.
+\end{lemma}
+
+\begin{proof}
+    We choose arbitrarily a  string $st \in \join(\Lang(\ODD),\Lang(\ODD'))$ and show that it is accepted by OBDD $\ODD^* = \symbjoin(\ODD,\ODD')$.
+    By the definition of $\join$ we know that there exists strings $s_1t_1$ and $s_2t_2$ accepted by OBDDs $\ODD$ and $\ODD'$ respectively, such that $\join(st_1,st_2) = st$. Consequently, we know that $s_1 = s_2 = s$ and $t_1 +t_2 = t$. We now distinguish between two cases: case 1, where $t_1 = t_2$ and case 2, where $t_1 \neq t_2$.
+    \begin{itemize}
+        \item Case 1: We will show that $st$ is accepted by $\ODD^\scriptcap = B_1^{\scriptcap},\ldots,B_{|\activelabels|+1}^{\scriptcap}$ and therefore by $\symbjoin(\ODD_1,\ODD_2)$. In this case, strings $s_1t_1$ and $s_2t_2$ are identical so we know that they are accepted by OBDD $\ODD_1 \cap \ODD_2 = B_1,\ldots,B_{|\activelabels|+1}$. Since by definition the first $|\activelabelsatnode{\nodep}|$ layers of $\ODD_1 \cap \ODD_2$ and $\ODD^\scriptcap$ are identical we know that there exists a path from the initial state in $\B^\scriptcap_1$ to some state $q$ of layer $\B_{|\activelabels|}^\scriptcap$ reading $s_1$. We know that some transition $(q,t_1,a)$ exists in $\B_{|\activelabels|+1}$ and therefore by definition transition $(q,t_1+t_2,a)$ exists in layer $\B_{|\activelabels|+1}^\scriptcap$ and $st$ is read by $\ODD^\scriptcap$ and therefore also $\symbjoin(\ODD_1,\ODD_2)$.
+        
+        \item Case 2: We will show that $st$ is accepted by $\ODD^\scriptcup$ and therefore by $\symbjoin(\ODD_1,\ODD_2)$. By definition, the first $|\activelabels|$ layers of $\ODD_1 \cup \ODD_2$ and $\ODD^\scriptcup$ are identical. Further, (assuming OBDD $\ODD_1 \cup \ODD_2$ is minimized) we know as a direct consequence of determinism that there exists a unique path from the initial state in $\B^\scriptcup_1$ to some state $q$ of layer $\B_{|\activelabels|}^\scriptcup$ reading $s_1$. Since both $st_1$ and $st_2$ are accepted by $\ODD_1 \cup \ODD_2$ it is necessarily the case that transitions $(q, t_1, a)$ and $(q,t_2,a)$ exist in $\B_{|\activelabels|+1}$ and therefore by definition transition $(q,t_1 + t_2,a)$ exists in $\B_{|\activelabels|}^\scriptcup$. Hence string $st$ is accepted by $\ODD^\scriptcup$ and therefore also by $\symbjoin(\ODD_1,\ODD_2)$.
+    \end{itemize}
+
+    Since $st$ was chosen arbitrarily we conclude that $\join(\Lang(\ODD_1,\ODD_2)\subseteq\Lang(\symbjoin(\ODD_1,\ODD_2))  $
+
+    Next we choose arbitrarily a string $st$ accepted by OBDD $\ODD^* = \symbjoin(\ODD,\ODD')$ and show that it is in the language $\join(\Lang(\ODD),\Lang(\ODD'))$.
+
+    Since $\ODD^* = \symbjoin(\ODD,\ODD') = \ODD^{\scriptcap} \cup \ODD^{\scriptcup}$ we distinguish between the following two cases: case 1, where $st$ is accepted by $\ODD^\scriptcap$ and case 2, where $st$ is accepted by $\ODD^\scriptcup$.
+    \begin{itemize}
+        \item Case 1: We will show that $st'$ where $2 \cdot t' = t$, is accepted by $\ODD_1 \cap \ODD_2 = B_1,\ldots,B_{|\activelabels|+1}$ and therefore belongs to language $\join(\Lang(\ODD_1),\Lang(\ODD_2))$ by definition. The layers of $\ODD^\scriptcap$ and $\ODD_1 \cap \ODD_2$ are by definition identical up to $|\activelabels|$-th layer and so there exists a path $p$ starting at the initial state of $\ODD_1 \cap \ODD_2$ and ending at some state $q$ of the image of layer $\B_{|\activelabels|}$ reading $s$. Since there exists a transition $(q,t,a)$ in layer $\B_{|\activelabels|+1}^\scriptcap$ there must exist transition $(q,t',a)$ in layer $\B_{|\activelabels|+1}$ by the construction of $\ODD^\scriptcap$ and therefore $st'$ is read by $\ODD_1 \cap \ODD_2$. Finally we can conclude from the definition of the $\join$ operation that $st$ belongs to $\join(\Lang(\ODD_1,\ODD_2))$.
+        
+        
+        \item Case 2: In this case we will assume that input OBDDs store only witnesses of smallest size for each witness string component. We will show that there exists strings $st_1$ and $st_2$ where $t_1 + t_2 = t$, that are accepted by $\ODD_1\cup \ODD_2$ (and therefore belongs to set $\join(\ODD_1,\ODD_2)$ since strings $st_1$ and $st_2$ cannot both be accepted by $\ODD_1$ or $\ODD_2$ by our uniqueness assumption). The layers of $\ODD^\scriptcup$ and $\ODD_1 \cup \ODD_2$ are by definition identical up to $|\activelabels|$-th layer and so there exists a path $p$ starting at the initial state of $\ODD_1 \cup \ODD_2$ and ending at some state $q$ of the image of layer $\B_{|\activelabels|}$ reading $s$. By definition there exists transition $(q,t,a)$ in layer $\B_{|\activelabels|+1}^\scriptcup$ and so there must exist transitions $(q,t_1,a)$ and $(q,t_2,a)$ in $\B_{|\activelabels|+1}$ by the construction of $\ODD^\scriptcup$ and therefore both $st_1$ and $st_2$ are accepted by $\ODD_1 \cup \ODD_2$. Note that both cannot be accepted by just one of $\ODD_1$ and $\ODD_2$ as the string with larger weight would have been removed under minimization. Therefore we may assume that $st_1$ is accepted by $\ODD_1$ and $st_2$ is accepted by $\ODD_2$. Finally we can conclude from the definition of the $\join$ operation that $st$ belongs to $\join(\Lang(\ODD_1),\Lang(\ODD_2))$. 
+        
+    \end{itemize}
+
+    Since $st$ was chosen arbitrarily we can conclude that $\Lang(\symbjoin(\ODD_1,\ODD_2)) \subseteq \join(\Lang(\ODD_1,\ODD_2))$.
+
+    Since we have shown that $\Lang(\symbjoin(\ODD_1,\ODD_2)) \subseteq \join(\Lang(\ODD_1),\Lang(\ODD_2))$ and that $\join(\Lang(\ODD_1),\Lang(\ODD_2)) \subseteq \Lang(\symbjoin(\ODD_1,\ODD_2))$ we conclude that $\join(\Lang(\ODD_1),\Lang(\ODD_2)) = \Lang(\symbjoin(\ODD_1,\ODD_2))$.
+     
+\end{proof}
+
+
+% \section{Symbolic DP-width Upper Bounds}
+
+% In this section, we derive upper bounds on the width of OBDDs representing witnesses for $n \times n$ rook graphs for the {\sc Vertex Cover} DP-core $\dpcore$ under $k$-instructive path decompositions. The proofs
+% proceed by explicitly describing sequences of OBDD constructions associated with bags of a tree decomposition in which every
+% OBDD has bounded width.
+
+% Before presenting the proofs, we introduce some relevant concepts and establish several key intermediate results.
+
+% \paragraph*{Simple $k$-instructive tree decompositions.}
+% For some arguments in the appendix it will be convenient to work with a restricted
+% variant of $k$-instructive tree decompositions in which explicit edge-introduction
+% instructions are omitted. Intuitively, in this variant all edges incident to a
+% newly introduced vertex are introduced immediately.
+
+% Formally, a \emph{simple $k$-instructive tree decomposition} is a term over the
+% alphabet
+% \[
+% \Sigma_k^{\mathrm{simp}}
+% =\{\leaflabel,\introvertexlabel{u},\forgetvertexlabel{u},\joinlabel
+% \mid u \in [k+1]\},
+% \]
+% obtained from $\Sigma_k$ by removing the symbols $\introedgelabel{u}{v}$.
+% The semantics are identical to those of $k$-instructive tree decompositions,
+% except for $\introvertexlabel{u}$: when applied at a node $p$ with child $p'$,
+% the instruction $\introvertexlabel{u}$ introduces a new vertex labeled $u$ and,
+% in addition, introduces all edges between this new vertex and the currently
+% active vertices that are present in the underlying graph being decomposed. The
+% instructions $\leaflabel$, $\forgetvertexlabel{u}$, and $\joinlabel$ are
+% interpreted as before\footnote{For the purposes of dynamic programming over tree decompositions, simple $k$-instructive tree decomposition are equivalent to the notion of nice tree decompositions as defined in \cite{BlueBook}}.
+
+% A \emph{$k$-instructive path decomposition} is a $k$-instructive tree decomposition where the underlyin tree is a path (i.e. no join nodes are used).
+
+% \paragraph*{Ordered string representation of vertex subsets.}
+% Let $G=(V,E)$ be a graph and let $\pi=(v_1,\dots,v_{|V|})$ be a fixed ordering of
+% its vertices. For any subset $S \subseteq V$, the \emph{$\pi$-ordered string
+% representation} of $S$ is the binary string $\chi_\pi(S) \in \{0,1\}^{|V|}$
+% defined by
+% \[
+% \chi_\pi(S)_i =
+% \begin{cases}
+% 1 & \text{if } v_i \in S,\\
+% 0 & \text{otherwise.}
+% \end{cases}
+% \]
+% Equivalently, $\chi_\pi(S)$ is the characteristic vector of $S$ written with
+% respect to the vertex order $\pi$.
+
+% \paragraph*{Split stars.}
+% A \emph{star} $S_k$ is the complete bipartite graph $K_{1,k}$, i.e., a tree
+% consisting of one center vertex adjacent to $k$ leaves. A \emph{split star} is a
+% graph whose vertex set can be partitioned into two sets $C \uplus I$ such that
+% $G[C]$ is a star and $G[I]$ is an independent set\footnote{We use the term split star by analogy to
+% \emph{split graphs}, where $G[C]$ is a clique and $G[I]$ is an independent set.}.
+
+% \begin{observation}\label{SymbolicDPwidthSplitStars}
+% For every split star $G$ and every vertex ordering $\pi$ of $G$, there exists an
+% OBDD of width at most~$3$ that accepts exactly the $\pi$-ordered string
+% representations of the vertex covers of $G$.
+% \end{observation}
+% % \begin{proof}
+% %     The proof is by construction. We construct an OBDD where each layer has atmost 3 left states and 3 right states and each state is aid to belong to one fo three "tracks": the reject track, the thin ice track and the accept track. Intuitively/semanticly if a state on the reject track is reached upon reading a string s then this string will go on to reach the reject state and be rejected by the OBDD regardless of what is read in the subsequent layer(s)/in the subsequent position(s) in the (sub)string. if a (sub)string read by our OBDD reaches a state on the thin ice track then this string may or may not go on to be rejected depending on what is read in the subsequent position of the string. If a (sub)string read by our OBDD reaches an accept state then whatever value is read in the next postion of the string, this substring will still consist of a substring/prefix of a substring taht is accpted by the OBDD.
+
+% %     More formally, given ordering $\pi$ we construct OBDD $\ODD$ case by as follows: 
+
+% %    \begin{itemize}
+% %        \item First layer/position of the string,
+% %        \begin{enumerate}
+% %            \item If the first position in the string corresponds to an independent set vertex then layer $\B_{\pi(1)}$ consists of transistions reading values 1 and 0 both starting and ending at states on the accept track.
+% %            \item If $\pi(1)$ is a leaf of the star then $\B_{\pi(1)}$ consists of a transtion reading value 1 startnig from hte initial state and ending at the right state on the accept track. asw wel as a transistion starting from the initial state reading 0 and ending at a tright state that is on the thin ice track. indeed any string read via this transition will be rejected unless a one is read at the layer/position correspondin to the center of the star
+% %            \item If the first position corresponds to the center of the star, then $\B_{\pi(1)}$ is the exact same as for the leaf vertex. However here semantically we see a (sub)string entering the thin ice track upon reading 0 to mean that for all subsequent positions corresponding to leaf vertices an 1 must be read or else the string will go on to be rejected.
+% %        \end{enumerate}
+% %        \item Next we consider a layer that is not the starting layer. 
+% %        \begin{enumerate}
+% %            \item If at this the vertex corresponding to this layer is an independent set vertex then $\B$ consists of transistions readin 0 and 1 for eachleft state to its corresponding right state on the same track. Semanticlaly these vertices do not actively detrmin whehter a subset ofvertices will be a vertx cover and so values 0 and 1 can be read indiscriminately for and string reaching a left state at this layer.
+% %            \item If layer $\B$ corresponds to a leaf vertex $\nodeu$ then we differentiat between the case where the center appears before this leaf in ordering $\pi$ or after:
+% %            \begin{enumerate}
+% %                \item If $\nodeu$ appears before the center vertex in th eordering then from layer $\B_{\pi(\nodue)}$ consists of transistion labeld 1 from the accept state to the accept state and transition labelled 0 form the accept state to the thin ic state. Moreover, there are transistions from the thin ice state to the thin ice state labeled 0 and 1. Intuitively, if I have aread a string that reaches (has reached) the thin ice track in this case then a 0 has been read at some leaf and the center position must take value 1 or the current string will be rejected. (note thta there is no reject track ye at this stage)
+% %                \item  If $\nodeu$ appears after the center vertex under $\pi$ then $\B_{\pi(\nodue)}$ consists of: transistions  reading 0 and 1 from left state in the reject track to right state in th reject track, transition reading 0 from the htin ice trcak to the reject track, transition reading 1 form left state on the thin ice track to right state on the thoin ice track, trnsitions reading 1 and 0 from the accept track to right state on the accept track. the latter ytarnsitions on the accept track sematicallycan be interpreted as strings read up to that state wher the center vertex takes value 1 and so values  1 and 0 can be read indiscriminately for the rest of the string and still be accepted.
+% %            \end{enumerate}
+% %            \item If $\nodeu$ is the cnetre vertex then $\B_{\pi(\nodue)}$ consist of: transistion labeled 1 from the accept track to right state on the accept track, transition labelled 0 from  the accept track the right state on the thin ice track, transition reading 1 from left state of the thin ice track to right state on the accept track and finally transition reading 0 from left state on the htin ice track to right state on the reject track. 
+% %        \end{enumerate}
+% %        \item Lastly, for $\nodeu$ corresponding to the final layer, $\B_{\pi(\nodue)}$ consist of: transistions reading 0 nad 1 from left state on the reject track to the reject state, trabnsitions reading 0 nad 1 from left state on the accept track to the accept state, transition reading 0 form the thin ice track to the rejcet state and transition reading 1 form the thin ice track to the accept state
+% %    \end{itemize}
+
+% %     One can readily verify that the above OBDD accepts exactly the $\pi$-ordered string
+% %     representations of the vertex covers of $G$.
+    
+% % \end{proof}
+
+% \begin{proof}
+% We construct such an OBDD explicitly.  
+% Each layer contains at most three states, which we group into three \emph{tracks} (state classes):
+% an \emph{accept track}, a \emph{thin-ice track}, and a \emph{reject track}.
+% These tracks encode the following semantics.  
+% If a prefix reaches the reject track, then every extension is rejected.
+% If a prefix reaches the thin-ice track, then acceptance depends on future
+% assignments.  
+% If a prefix reaches the accept track, then every extension remains extendable to
+% a vertex cover without restriction on the immediately succeeding variable.
+
+% Let $\pi$ be the given variable ordering.  
+% We construct the OBDD layer by layer.
+
+% \medskip
+% \noindent\textbf{First layer.}
+% Let $v_1$ be the first vertex under ordering $\pi$ and hence $\B_{v_1}$ the first layer of our OBDD.
+
+% \begin{enumerate}
+%     \item If $v_1$ is an independent-set vertex, then both transitions
+%     (on inputs $0$ and $1$) lead from the initial state to a right state on the accept track.
+
+%     \item If $v_1$ is a leaf of the star, then the layer contains a transition
+%     on input $1$ to the accept track and a transition on input $0$ to the thin-ice track.
+%     Assigning $0$ to a leaf forces the center to be chosen later.
+
+%     \item If $v_1$ is the center, the transitions are the same as in the leaf case.
+%     Reaching the thin-ice track on input $0$ indicates that all subsequent leaves must
+%     take value~$1$.
+% \end{enumerate}
+
+% \medskip
+% \noindent\textbf{Intermediate layers.}
+% Let $v_i$ be the vertex processed at layer $i$.
+
+% \begin{enumerate}
+%     \item \emph{Independent-set vertices.}
+%     For each track, transitions on both inputs $0$ and $1$ remain on the same track.
+%     These vertices impose no constraints on vertex covers.
+
+%     \item \emph{Leaf vertices.}
+%     We distinguish two cases.
+
+%     \begin{enumerate}
+%         \item If the center appears \emph{after} $v_i$ in $\pi$, then reading $0$ at $v_i$
+%         forces the center to be $1$.  
+%         The layer contains:
+%         \begin{itemize}
+%             \item from the accept track: a transition on input $1$ to the accept track
+%             and on input $0$ to the thin-ice track;
+%             \item from the thin-ice track: transitions on both inputs to the thin-ice track.
+%         \end{itemize}
+
+%         \item If the center appears \emph{before} $v_i$, then the feasibility of the prefix
+%         is already determined by the center's value.  
+%         The layer contains:
+%         \begin{itemize}
+%             \item from the accept track: transitions on both inputs to the accept track;
+%             \item from the thin-ice track: a transition on input $1$ to the thin-ice track
+%             and on input $0$ to the reject track;
+%             \item from the reject track: transitions on both inputs to the reject track.
+%         \end{itemize}
+%     \end{enumerate}
+
+%     \item \emph{The center vertex.}
+%     The layer contains:
+%     \begin{itemize}
+%         \item from the accept track: a transition on input $1$ to the accept track
+%         and on input $0$ to the thin-ice track;
+%         \item from the thin-ice track: a transition on input $1$ to the accept track
+%         and on input $0$ to the reject track.
+       
+%     \end{itemize}
+% \end{enumerate}
+
+% \medskip
+% \noindent\textbf{Final layer.}
+% For the final variable $v_{|V_G|}$, transitions lead directly to the terminal states:
+% \begin{itemize}
+%     \item from the accept track: transitions on both inputs to the accept terminal;
+%     \item from the reject track: transitions on both inputs to the reject terminal;
+%     \item from the thin-ice track: a transition on input $1$ to the accept terminal
+%     and on input $0$ to the reject terminal.
+% \end{itemize}
+% % \medskip
+% % \noindent\emph{Remark.}
+% % Before the center vertex is processed, no prefix can yet be definitively rejected:
+% % even if some leaf has been assigned value~$0$, the assignment may still be
+% % extended to a valid vertex cover by choosing the center.  
+% % Consequently, no state on the reject track appears among the left states of any
+% % layer preceding the center, and the center layer therefore has no transitions
+% % originating from the reject track.  
+% % At the same time, a prefix on the accept track may still lead to rejection after
+% % the center is read.  
+% % For example, if the center is assigned value~$0$ (placing the computation on the
+% % thin-ice track), then any subsequent leaf assigned value~$0$ forces rejection.
+% % This behavior is precisely captured by the transitions of the center layer and
+% % the leaf layers that follow it.
+
+% \medskip
+% By construction, the OBDD maintains at every layer the feasibility status of the
+% prefix with respect to being extendable to a vertex cover of the split star.
+% The accept, thin-ice, and reject tracks correspond exactly to prefixes that are
+% unconditionally extendable (for layers appearing after the center vertex under ordering $\pi$), conditionally extendable, and not extendable to a
+% vertex cover, respectively.  
+% Thus the OBDD accepts precisely the $\pi$-ordered encodings of vertex covers of $G$.
+% Since each layer contains at most one state per track, the width is at most~$3$.
+% \end{proof}
+
+
+
+% \paragraph*{Symbolic DP-width of Rook Graphs}
+
+% To show bounds on the minimum width of OBDDs representing sets of partial solutions under symbolic DP over a $k$-instructive path decomposition, we follow a similar "track" based strategy as in the proof of Observation \ref{SymbolicDPwidthSplitStars} bounding the width of OBDDs representing the ordered string representations of vertex covers for split stars. 
+
+% \begin{observation}\label{SymbolicDPwidthRook}
+% Let $G$ be the $n\times n$ rook graph. For every vertex ordering $\pi$ of $G$ there exists an OBDD of width at most
+% $2+\binom{2n}{n}$
+% that accepts exactly the $\pi$-ordered string representations of the vertex covers of $G$.
+% \end{observation}
+
+% \begin{proof}
+% We give an explicit layerwise construction. The construction is a track‑based OBDD
+% analogous in spirit to the split‑star construction but adapted to the local
+% constraints of the rook graph.
+
+% \medskip
+% \noindent\textbf{Tracks and width bound.}
+% Each layer contains at most one state from each of the following tracks:
+% \begin{itemize}
+%   \item an \emph{accept track},
+%   \item a \emph{reject track},
+%   \item a track indexed by each ordered pair $(\mathsf{rs},\mathsf{cs})$ where
+%         $\mathsf{rs}\subseteq[n]$ is a set of row indices, $\mathsf{cs}\subseteq[n]$
+%         is a set of column indices, and $|\mathsf{rs}|=|\mathsf{cs}|$.
+% \end{itemize}
+% The number of pairs $(\mathsf{rs},\mathsf{cs})$ with $|\mathsf{rs}|=|\mathsf{cs}|$
+% equals $\sum_{k=0}^n\binom{n}{k}^2=\binom{2n}{n}$. Hence each layer contains at most
+% $2+\binom{2n}{n}$ states, giving the stated width bound.
+
+% Intuitively, a tuple track $(\mathsf{rs},\mathsf{cs})$ records precisely the set
+% of rows and columns in which the prefix read so far has seen a $0$. The invariant
+% $|\mathsf{rs}|=|\mathsf{cs}|$ is preserved by the transitions and is used to
+% limit the number of tuple tracks.
+
+% \medskip
+% \noindent\textbf{Semantics and invariant.}
+% Let the input be the $\pi$-ordered bitstring that assigns $0$ or $1$ to each cell.
+% When the OBDD is in the state for $(\mathsf{rs},\mathsf{cs})$ after reading a
+% prefix, the invariant is:
+% \begin{quote}
+% the set of rows in which the prefix has seen a $0$ equals $\mathsf{rs}$, and the set of columns in which the prefix has seen a $0$ equals $\mathsf{cs}$.
+% \end{quote}
+% In particular, no row or column contains more than one $0$ in the prefix (otherwise
+% the computation would have been routed to the reject track earlier). The accept
+% track represents prefixes that so far contain no zeros (equivalently the empty
+% tuple $(\emptyset,\emptyset)$), and the reject track is absorbing and
+% represents prefixes that cannot be extended to a vertex cover (i.e., some row
+% or column already contains two zeros).
+
+% \medskip
+% \noindent\textbf{Layer transitions.}
+% Let the current layer correspond to cell $(r,c)$ (row $r$, column $c$).
+% We describe transitions from each track on inputs $0$ and $1$.
+
+% \begin{enumerate}
+%   \item \textbf{Reject track.} From the reject track both inputs $0$ and $1$
+%         transition to the reject right state (the reject track is absorbing).
+
+%   \item \textbf{Accept track.} The accept track behaves like the empty tuple
+%         $(\emptyset,\emptyset)$:
+%         \begin{itemize}
+%           \item on input $1$: stay on the accept track (no new zero is introduced);
+%           \item on input $0$: move to the tuple track $(\{r\},\{c\})$ (row $r$
+%                 and column $c$ now contain a zero).
+%         \end{itemize}
+
+%   \item \textbf{Tuple track $(\mathsf{rs},\mathsf{cs})$ with $|\mathsf{rs}|=|\mathsf{cs}|$.}
+%         Let the input bit be $b$.
+%         \begin{itemize}
+%           \item If $b=1$: remain in the same tuple track $(\mathsf{rs},\mathsf{cs})$.
+%                 Including the current vertex does not create any new zero in a row or column.
+%           \item If $b=0$: attempt to move to
+%                 $(\mathsf{rs}\cup\{r\},\,\mathsf{cs}\cup\{c\})$. If $r\in\mathsf{rs}$
+%                 or $c\in\mathsf{cs}$ (i.e., this would create a second zero in row $r$
+%                 or column $c$), then route the transition to the reject track; otherwise
+%                 perform the move to $(\mathsf{rs}\cup\{r\},\,\mathsf{cs}\cup\{c\})$.
+%         \end{itemize}
+% \end{enumerate}
+
+% All transitions above are total: every left state has defined transitions on both
+% inputs to right states in the next layer. The equality $|\mathsf{rs}|=|\mathsf{cs}|$
+% is preserved because every time a $0$ is read we add exactly one row index and
+% one column index.
+
+% \medskip
+% \noindent\textbf{Final layer.}
+% At the final layer there are exactly two right terminal states: the \emph{Accept}
+% state and the \emph{Reject} state. Transitions from the left states of the final
+% layer to these two terminals are defined as follows:
+
+% \begin{itemize}
+%   \item From the reject track: both inputs $0$ and $1$ go to the Reject terminal.
+%   \item From any non-reject tuple track $(\mathsf{rs},\mathsf{cs})$ or from the
+%         accept track: on input $1$ go to the Accept terminal.
+%   \item From any non-reject tuple track $(\mathsf{rs},\mathsf{cs})$ or from the
+%         accept track: on input $0$ go to the Accept terminal \emph{only if}
+%         $r\notin\mathsf{rs}$ and $c\notin\mathsf{cs}$ (i.e., the final $0$ does not
+%         create a second zero in the row or column); otherwise go to the Reject terminal.
+% \end{itemize}
+
+% By construction the OBDD records exactly which rows and columns have seen a $0$
+% in the prefix. A run is routed to the reject track precisely when some row or
+% column receives a second $0$, which is exactly the condition that the bitstring
+% cannot represent a vertex cover of the rook graph. Conversely, any string that
+% never produces two zeros in the same row or column is never routed to reject,
+% and the final transitions above send such a string to the Accept terminal.
+% Therefore the OBDD accepts exactly the $\pi$-ordered encodings of vertex covers
+% of $G$.
+
+% % \medskip
+% % \noindent\textbf{Width bound.}
+% % Each layer contains at most one state from the accept track, one from the reject
+% % track, and at most one state for each pair $(\mathsf{rs},\mathsf{cs})$ with
+% % $|\mathsf{rs}|=|\mathsf{cs}|$. Hence the width is at most
+% % \[
+% % 2+\#\{(\mathsf{rs},\mathsf{cs}):\mathsf{rs}\subseteq[n],\,\mathsf{cs}\subseteq[n],\,|\mathsf{rs}|=|\mathsf{cs}|\}
+% % =2+\sum_{k=0}^n\binom{n}{k}^2
+% % =2+\binom{2n}{n},
+% % \]
+% % as claimed.
+% \end{proof}
+
+
+% The OBDD construction in the above proof holds also for induced subgraphs a given Rook graph 
+
+% \begin{corollary}\label{cor:SymbolicDPwidthRook}
+% Let $G$ be the $n\times n$ rook graph. For every vertex ordering $\pi$ of $G$ there exists an OBDD of width at most $2+\binom{2n}{n}$
+% that accepts exactly the $\pi$-ordered string representations of the vertex covers of any induced subgraph $G$.
+% \end{corollary}
+
+% We are now ready to derive upper bounds on the width of OBDDs representing witnesses for $n \times n$ rook graphs for the {\sc Vertex Cover} DP-core $\dpcore$ under $k$-instructive path decompositions.
+
+% % \begin{proposition}\label{RookGraphSDP}
+% %     Let $G$ be the $n\times n$ rook graph and let $T$ be a simple $k$-instructive tree decomposition\todo{Path decomposition?} for $G$. The width of any OBDD accepting the witnesses set at any node of $T$ under symbolic DP is bounded above by $2^{\BigO(\sqrt{N})}$.
+% % \end{proposition} 
+
+% \begin{proposition}\label{RookGraphSDP}
+% Let $G$ be the $n\times n$ rook graph and let $T$ be a simple $k$-instructive path decomposition for $G$.
+% Then the width of any OBDD accepting the witness set at any node of $T$ under symbolic DP is bounded above by
+% \(\;2^{\BigO(\sqrt{N})}\), where \(N=n^2\) is the number of vertices of \(G\).
+% \end{proposition}
+
+% \begin{proof}
+% Let $N=n^2$. Fix an arbitrary node $t$ of the simple $k$-instructive decomposition $T$.
+% Let $A_t$ denote the set of active vertices at $t$ (the vertices that are present in the bag of $t$ and have not yet been forgotten).
+% By the definition of a simple $k$-instructive decomposition the subgraph of $G$ induced by $A_t$ is an induced subgraph of the full $n\times n$ rook graph.
+% Hence Corollary~\ref{cor:SymbolicDPwidthRook} applies to the induced subgraph on $A_t$ and yields an OBDD that represents exactly the \(\pi\)-ordered string component of the witness set at $t$ with width at most
+% \[
+% 2 + \binom{2n}{n}=\;2^{\Theta(n)} \;=\; 2^{\Theta(\sqrt{N})}.
+% \]
+% We will show inductively that all symbolic‑DP operations performed at node $t$ (introduce, forget, and the usual local intersections/unions) can be implemented without increasing the OBDD width beyond \(2^{\BigO(\sqrt{N})}\).
+
+% \medskip\noindent\textbf{Base case.}
+% Corollary~\ref{cor:SymbolicDPwidthRook} gives an OBDD for the string component of witnesses. To represent the full witness used in symbolic DP we also need to record the size component. This can be done by adding a single final layer that maps every non‑reject track state to the Accept terminal with the appropriate size value and maps the reject track state to the Reject terminal. Concretely, append a final layer that, for every non‑reject left state, emits transitions that set the size component to the current size (we may assume that accepting partial solutions at this stage have size component $0$ in which case it would suffice to show that size adjustments under the forget operation do not increase the resulting OBDD width "too much"). This augmentation does not increase the number of tracks or the width; therefore the combined OBDD (string plus size) still has width \(2^{\Theta(\sqrt{N})}\).
+
+% \medskip\noindent\textbf{Introduce operation.}
+% Suppose the DP introduces a new vertex $v$. The set of partial solutions at the succeeding node is obtained by combining the current witness set with the local constraint imposed by $v$ and its incident edges to active vertices. In the rook graph the neighborhood of $v$ forms a star (center $v$ with leaves the vertices sharing its row or column among the active set), so the local constraint can be represented by an OBDD of constant width (at most $3$) by Observation~\ref{SymbolicDPwidthSplitStars}. The new witness set is the intersection of the current OBDD and this constant‑width OBDD.
+
+% Form the layerwise product (synchronous intersection) of the two OBDDs\todo{Insert refernce to product cnstruction bryant}. The product construction yields an OBDD whose width is at most the product of the widths of the operands. Thus the resulting width is at most
+% \[
+% 2^{\Theta(\sqrt{N})} \cdot 3 \;=\; 2^{\Theta(\sqrt{N})}.
+% \]
+
+% \medskip\noindent\textbf{Forget operation.}
+% When a vertex $v$ is forgotten at a node, the DP must produce the witness set for the bag with $v$ removed. Operationally this requires (i) adjusting the size component to account for whether $v$ was chosen in each partial solution, and (ii) removing the layer corresponding to $v$ from the OBDD.
+
+% The size adjustment can be implemented locally on final layer :
+% \begin{itemize}
+%   \item For every tuple track $(\mathsf{rs},\mathsf{cs})$ at the final layer consider the row/column indices of $v$, say $(r,c)$. If $r\notin\mathsf{rs}$ and $c\notin\mathsf{cs}$ then this state was reached by reading a $1$ at $v$. We  may thus increment the size on transitions from this state to the accept terminal by 1. If exactly one of $r$ or $c$ is in the tuple then the bit at $v$ must have been $1$ (otherwise the tuple would already contain both indices), so we increment the size on all transitions from that tuple to the accept terminal also. If both $r$ and $c$ are in the tuple then both possibilities (the $0$ that created the tuple entry or a later $0$ elsewhere) may have led here; in this case we keep the existing transitions and additionally add copies of those transitions with the size component incremented by $1$ to account for the possibility that $v$ took value 1. 
+% \end{itemize}
+% These local modifications only duplicate or redirect transitions within the same layer and do not create new tuple indices beyond those already present. After adjusting sizes we remove the layer for $v$ as described under section \ref{subsec:FrgProof}. The resulting layered automaton may be non‑deterministic but has non deterministic degree at most $2$ per left state.
+
+% Finally, we determinize this non‑deterministic layered automaton.\todo{Ref to non deterministic degree.} By Lemma~1 of Alferov et al.~\cite{alferov2022} (applied to layered automata of out‑degree at most $2$) the determinization increases width at most quadratically.Since the original width is \(2^{\Theta(\sqrt{N})}\) the determinized width remains \(2^{\Theta(\sqrt{N})}\). Concretely, the determinization produces an OBDD of width at most \(2^{\BigO(\sqrt{N})}\).
+% \end{proof}
+
+% The proof of the above Proposition holds also for the following Corollary regarding $k$-instructive path decompositions with only minor adjustments. 
+
+% \begin{corollary}\label{cor:RookGraphSDP}
+%     Let $G$ be the $n\times n$ rook graph and let $T$ be a simple $k$-instructive path decomposition for $G$.
+% Then the width of any OBDD accepting the witness set at any node of $T$ under symbolic DP is bounded above by
+% \(\;2^{\BigO(\sqrt{N})}\), where \(N=n^2\) is the number of vertices of \(G\).
+% \end{corollary}
+% \begin{proof}
+%     The only operation to check to adapt the proof of Proposition \ref{RookGraphSDP} is the Introduce edge operation. Notice that any sequence of edge introductions results in a graph obtainable from a simple $k$-instructive path decomposition where these edges are introduced all at once. An OBDD representing these intermediate graphs can therefore not exceed \(\;2^{\BigO(\sqrt{N})}\) after minimization. 
+% \end{proof}
+
+
+% % Bounding the Symbolic DP-width of rook graphs follows a strategy similar to that used
+% % for complete graphs. We describe an OBDD representing the set of partial
+% % solutions to {\sc Vertex Cover} for an arbitrary induced subgraph of the rook
+% % graph $R_n$.
+
+% % The OBDD consists of a reject state together with states indexed by pairs
+% % $(rs,cs)$ of subsets of $[n]$. Intuitively, $rs$ records rows that are on thin
+% % ice and $cs$ records columns that are on thin ice. The accept state corresponds
+% % to $(\emptyset,\emptyset)$.
+
+% % \medskip
+% % \noindent\textbf{Transition structure.}
+
+% % Let $(i,j)$ be the vertex corresponding to the first layer, that is,
+% % $\activelabels[(i,j)] = 1$. The first layer contains a single left state
+% % (the initial state). Reading~$1$ leads to the state $(\emptyset,\emptyset)$,
+% % while reading~$0$ leads to the state $(\{i\},\{j\})$.
+
+% % Now consider a later layer $\B_{\activelabels[(i,j)]}$ corresponding to a
+% % vertex $(i,j)$, and let $(rs,cs)$ index the current state.
+
+% % If $i \in rs$ or $j \in cs$, then reading~$0$ leads to rejection, while
+% % reading~$1$ preserves the state:
+% % \[
+% % ((rs,cs),1,(rs,cs))
+% % \quad\text{and}\quad
+% % ((rs,cs),0,0).
+% % \]
+
+% % If $i \notin rs$ and $j \notin cs$, then reading~$0$ leads to
+% % \[
+% % (rs \cup \{i\},\, cs \cup \{j\}),
+% % \]
+% % while reading~$1$ preserves the state:
+% % \[
+% % ((rs,cs),0,(rs \cup \{i\}, cs \cup \{j\}))
+% % \quad\text{and}\quad
+% % ((rs,cs),1,(rs,cs)).
+% % \]
+
+% % \medskip
+% % \noindent\textbf{The invariant $|rs| = |cs|$.}
+
+% % Observe that the only transition that modifies the state is the transition
+% % reading~$0$ in the case $i \notin rs$ and $j \notin cs$. In that case,
+% % both row~$i$ and column~$j$ are added simultaneously.
+% % Thus rows and columns are always introduced in pairs.
+
+% % Since the initial state is $(\emptyset,\emptyset)$, it follows inductively that
+% % along any accepting computation we always have
+% % \[
+% % |rs| = |cs|.
+% % \]
+% % Therefore, only pairs $(rs,cs)$ satisfying $|rs|=|cs|$ are reachable, and it
+% % suffices to include only such states in the OBDD.
+
+% % The number of such pairs equals
+% % \[
+% % \sum_{k=0}^{n} \binom{n}{k}^2
+% % = \binom{2n}{n}
+% % = \Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right).
+% % \]
+% % Hence the width of the constructed OBDD is
+% % \[
+% % \Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right).
+% % \]
+
+
+
+% % % \paragraph*{SDP-width of Rook Graphs}
+
+% % % Bounding the SDP-width of rook graphs follows a strategy similar to that used
+% % % for complete graphs. We begin by describing an OBDD representing the set of
+% % % partial solutions to {\sc Vertex Cover} for an arbitrary induced subgraph of the
+% % % rook graph $R_n$.
+
+% % % We construct an OBDD of width $2^{\BigO(\sqrt{N})}$, where $N = n^2$, consisting
+% % % of an accept track, a reject track, and a family of thin ice tracks indexed by
+% % % pairs of sets $(rs,cs) \in 2^{[n]} \times 2^{[n]}$. Here, $rs$ represents a set of
+% % % row indices and $cs$ represents a set of column indices. More precisely, if a
+% % % string reaches the thin ice track indexed by $(rs,cs)$ (or simply the
+% % % $(rs,cs)$-track), then reading the value~$0$ at the next layer causes the string
+% % % to be rejected whenever the vertex associated with that layer lies in one of the
+% % % rows in $rs$ or one of the columns in $cs$.
+
+% % % Equivalently, if a string reaches the $(rs,cs)$-track, then for each $i \in rs$
+% % % (respectively, each $j \in cs$), exactly one value~$0$ has already been read at a
+% % % layer corresponding to a vertex in row~$i$ (respectively, column~$j$).
+
+% % % We now define an OBDD representing the set of partial solutions to
+% % % {\sc Vertex Cover} for an arbitrary induced subgraph of a rook graph.
+% % % The transition structure of each layer is specified as follows.
+
+% % % Let $(i,j)$ be the vertex corresponding to the first layer, that is,
+% % % $\activelabels[(i,j)] = 1$. At this layer there is a single left state—the
+% % % initial state—belonging to the accept track. The right states consist of one
+% % % state for each pair of sets $(rs,cs) \in 2^{[n]} \times 2^{[n]}$, corresponding
+% % % to the $(rs,cs)$-thin ice tracks, together with one state for the accept track.
+
+% % % The layer $\B_{\activelabels[(i,j)]}$ contains one transition labeled~$1$
+% % % from the initial state to the accept track, and one transition labeled~$0$
+% % % from the initial state to the $(\{i\},\{j\})$-thin ice track.
+
+% % % Now consider the transitions at layer $\B_{\activelabels[(i,j)]}$ for a vertex
+% % % $(i,j)$ that is not assigned to the first layer. Let $(rs,cs)$ index a thin ice
+% % % state.
+
+% % % If $i \in rs$ or $j \in cs$, then reading the value~$0$ must lead to rejection,
+% % % while reading the value~$1$ preserves the current constraint. Accordingly,
+% % % layer $\B_{\activelabels[(i,j)]}$ contains transitions
+% % % \[
+% % % ((rs,cs),1,(rs,cs))
+% % % \quad\text{and}\quad
+% % % ((rs,cs),0,0)
+% % % \]
+% % % for each pair $(rs,cs)$ with $i \in rs$ or $j \in cs$.
+% % % Intuitively, any string reaching the $(rs,cs)$-track is already on thin ice with
+% % % respect to the rows in $rs$ and the columns in $cs$, and therefore reading~$0$
+% % % at this layer would violate the vertex-cover constraint.
+
+% % % On the other hand, if $i \notin rs$ and $j \notin cs$, then reading~$0$ leads to
+% % % the thin ice track indexed by $(rs \cup \{i\},\, cs \cup \{j\})$, while reading~$1$
+% % % leaves the state unchanged. That is, layer $\B_{\activelabels[(i,j)]}$ contains
+% % % transitions
+% % % \[
+% % % ((rs,cs),0,(rs \cup \{i\}, cs \cup \{j\}))
+% % % \quad\text{and}\quad
+% % % ((rs,cs),1,(rs,cs)).
+% % % \]
+% % % Intuitively, reading~$0$ from such a state places future vertices on thin ice
+% % % with respect to row~$i$ and column~$j$, whereas reading~$1$ imposes no additional
+% % % constraints.
+
+
+
+% % % \par\medskip
+% % % \noindent{\bf \cref{proposition:SDPWidthRook}.}
+% % % {\it 
+% % % Let $\dpcore$ be a DP-core solving {\sc Vertex Cover} and let $\treedec$ be an immediate tree decomposition of the $N$-node rook graph $R_n$ (with $N = n^2$). Then $\sw(\dpcore, \treedec)$ is bounded above by $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$.
+% % % }
+
+% % % \begin{proof}
+% % % We describe a sequence of OBDD constructions corresponding to the instructions
+% % % of an immediate tree decomposition of $R_n$, and we show that throughout this
+% % % sequence there exists an OBDD representing the current set of partial solutions
+% % % whose width is bounded by
+% % % $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$.
+
+% % % \smallskip
+% % % \noindent\textbf{State space and width bound.}
+% % % We represent partial solutions using an OBDD whose non-reject states are indexed
+% % % by pairs $(rs,cs)$ with $rs,cs \subseteq [n]$ and $|rs|=|cs|$, together with a
+% % % single reject state. Intuitively, $(rs,cs)$ records the set of rows $rs$ and
+% % % columns $cs$ that are currently \emph{on thin ice}: for each $i\in rs$
+% % % (respectively $j\in cs$), exactly one vertex in row~$i$ (respectively
+% % % column~$j$) has been assigned value~$0$ so far. The accept state is identified
+% % % with $(\emptyset,\emptyset)$.
+
+% % % The transition structure is defined so that the only way to change the index
+% % % pair is by reading a $0$ at some vertex $(i,j)$ with $i\notin rs$ and $j\notin
+% % % cs$, in which case both $i$ and $j$ are added simultaneously, moving to
+% % % $(rs\cup\{i\}, cs\cup\{j\})$. Hence, starting from $(\emptyset,\emptyset)$, the
+% % % invariant $|rs|=|cs|$ holds along all computations. Therefore, only states
+% % % indexed by pairs $(rs,cs)$ with equal cardinality are reachable, and the number
+% % % of such states is
+% % % \[
+% % % \sum_{k=0}^n \binom{n}{k}^2
+% % % = \binom{2n}{n}
+% % % = \Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right).
+% % % \]
+% % % Consequently, the width of our OBDD representation is bounded by
+% % % $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$.
+
+% % % \smallskip
+% % % \noindent\textbf{Introduce-vertex steps.}
+% % % Let $\ODD$ be an OBDD representing the current witness set at some node of
+% % % $\treedec$. When a new vertex is introduced, the operation
+% % % $\symbintrovertex{}$ inserts a new unconstraining layer and, by definition, does
+% % % not increase the width of $\ODD$. Hence vertex introductions preserve the above
+% % % width bound.
+
+% % % \smallskip
+% % % \noindent\textbf{Introduce-edge steps.}
+% % % Consider the introduction of an edge between two already active vertices
+% % % $x=(i,j)$ and $y=(i',j')$ in the rook graph, i.e., either $i=i'$ or $j=j'$.
+% % % The operation $\symbintroedge{x}{y}$ is implemented as an intersection with a
+% % % fixed filtering OBDD that removes exactly those assignments setting both
+% % % endpoints to~$0$ (cf.\ the definition of $\symbintroedge{}{}$).
+% % % Intersecting $\ODD$ with this filter yields an OBDD of width at most the product
+% % % of widths, and subsequent minimization can only decrease width.
+
+% % % In our setting, the filter enforces a constraint that is already captured by
+% % % the thin-ice semantics: once a row (or column) is on thin ice, reading a second
+% % % $0$ within that row (or column) leads to rejection. Introducing a rook edge
+% % % between two vertices in a common row/column is therefore equivalent to
+% % % forbidding the simultaneous assignment of $0$ to both endpoints, which is
+% % % realized by redirecting a bounded number of transitions into the reject state
+% % % (or, equivalently, by refining the thin-ice state space by at most a constant
+% % % factor per introduced vertex). Thus, during any sequence of edge introductions
+% % % incident to a newly introduced vertex, we can maintain an equivalent OBDD whose
+% % % states are still indexed by pairs $(rs,cs)$ with $|rs|=|cs|$, and whose width
+% % % remains bounded by
+% % % $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$.
+% % % (Full transition-level details are given in Appendix~\ref{...}.)
+
+% % % \smallskip
+% % % \noindent\textbf{Forget-vertex steps.}
+% % % Finally, consider forgetting a vertex $x=(i,j)$. The DP-core operation
+% % % $\forgetvertex{x}$ removes the corresponding bit from the witness string and
+% % % increments the size component by the value assigned to $x$. Symbolically, this
+% % % is implemented by contracting away the layer for $x$ and updating the size
+% % % labels in the final layer accordingly (cf.\ Appendix~\ref{subsec:FrgProof}).
+% % % This operation does not increase the number of $(rs,cs)$-indexed states and
+% % % therefore preserves the width bound.
+
+% % % \smallskip
+% % % Combining the above, at every node of the immediate decomposition $\treedec$
+% % % there exists an OBDD representing the set of partial solutions whose width is
+% % % bounded by $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$. Hence
+% % % $\sw(\dpcore,\treedec)$ is bounded above by
+% % % $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$, as claimed.
+% % % \end{proof}
+
+
+% % \par\medskip
+% % \noindent{\bf \cref{proposition:SDPWidthRook}.}
+% % {\it
+% % Let $\dpcore$ be a DP-core solving {\sc Vertex Cover} and let $\treedec$ be an
+% % immediate tree decomposition of the $N$-vertex rook graph $R_n$ (with $N=n^2$).
+% % Then $\sw(\dpcore,\treedec)$ is bounded above by
+% % $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$.
+% % }
+
+% % \begin{proof}
+% % Fix a node $p$ of $\treedec$ with active-label map $\activelabels$ and let
+% % $G_p$ denote the graph induced by the currently active vertices in the rook
+% % graph (equivalently, since $\treedec$ is immediate and edges are introduced as
+% % soon as both endpoints are active, $G_p$ contains exactly the rook edges whose
+% % endpoints are active at $p$).
+
+% % We show that for every such node $p$ there exists an OBDD $\ODD_p$ recognizing
+% % exactly the witness set produced by the {\sc Vertex Cover} DP-core at $p$, and
+% % whose states are indexed by the same family of pairs $(rs,cs)$ as in the
+% % transition structure defined above (together with the reject state). Since the
+% % number of reachable such pairs has been bounded immediately preceding the
+% % proposition, it follows that $\ODD_p$ has width
+% % $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$, and hence
+% % $\sw(\dpcore,\treedec)$ is bounded above by this value.
+
+% % \smallskip
+% % \noindent\textbf{Canonical rook-OBDD for an active set.}
+% % For any active-label map $\activelabels$, define the \emph{canonical rook-OBDD}
+% % $\ODD(\activelabels)$ to be the OBDD whose layers are indexed by
+% % $1,\dots,|\activelabels|$ and whose state set consists of:
+% % (i) one reject state (denoted $0$), and (ii) one state for each pair
+% % $(rs,cs)$ with $rs,cs \subseteq [n]$ and $|rs|=|cs|$.
+% % The initial state is $(\emptyset,\emptyset)$, and the transition relation at
+% % layer $\B_{\activelabels[(i,j)]}$ is exactly as specified in the ``Transition
+% % structure'' paragraph above. (Equivalently, $(\emptyset,\emptyset)$ plays the
+% % role of the accept-track state.)
+
+% % The final layer $\B_{|\activelabels|+1}$ is defined as in the {\sc Vertex Cover}
+% % SDP-core: for each left state $q$ and each size $t \in \dbset{|V|}$ it contains a
+% % transition labeled $t$ from $q$ to the accept state iff $t$ equals the number of
+% % vertices assigned value $1$ among the forgotten vertices so far (as maintained
+% % by the DP-core), and otherwise it goes to the reject state. (This is the same
+% % size-accounting convention used throughout the appendix; we omit repetition.)
+
+% % \smallskip
+% % \noindent\textbf{Correctness invariant.}
+% % We prove by induction over the nodes of $\treedec$ that for each node $p$ the
+% % witness set $\Witnesses(p)$ computed by the {\sc Vertex Cover} DP-core equals
+% % $\Lang(\ODD_p)$ for some OBDD $\ODD_p$ obtainable from $\ODD(\activelabels)$ by
+% % size-label adjustments only (i.e., without changing the \emph{string} acceptance
+% % behavior determined by the $(rs,cs)$-indexed transition structure).
+
+% % \smallskip
+% % \noindent\textbf{Leaf nodes.}
+% % At a leaf, $\Witnesses(p)=\leaf$ and the OBDD is exactly the OBDD defined by
+% % $\symbleaf$. This matches the canonical construction with no active vertices.
+
+% % \smallskip
+% % \noindent\textbf{Introduce-vertex nodes.}
+% % Let $p$ be an introduce-vertex node introducing a vertex $x=(i,j)$ and let $p'$
+% % be its child. By induction, $\Witnesses(p')=\Lang(\ODD_{p'})$ for some $\ODD_{p'}$
+% % of the required form. The symbolic operation $\symbintrovertex{x}$ inserts a
+% % fresh layer at position $\activelabels[x]$ that reads $0$ and $1$ and otherwise
+% % acts as the identity on states. This does not change the state set and hence
+% % preserves the width bound. Let the resulting OBDD be $\ODD'$.
+
+% % \smallskip
+% % \noindent\textbf{Introduce-edge nodes.}
+% % Let $p$ be an introduce-edge node introducing an edge $\{x,y\}$, where
+% % $x=(i,j)$ and $y=(i',j')$ are active and adjacent in $R_n$ (so either $i=i'$ or
+% % $j=j'$), and let $p'$ be its child. By induction, $\Witnesses(p')$ is recognized
+% % by an OBDD $\ODD_{p'}$ whose string acceptance is governed by the canonical
+% % $(rs,cs)$ transition structure on the current active set.
+
+% % By definition of {\sc Vertex Cover}, introducing the edge $\{x,y\}$ removes
+% % exactly those witnesses that assign $0$ to both $x$ and $y$. We show that the
+% % canonical transition structure enforces precisely this constraint at the moment
+% % the edge becomes present in $G_p$.
+
+% % Assume w.l.o.g.\ that $\activelabels[x] < \activelabels[y]$ in the variable
+% % order. Consider any run of $\ODD_{p'}$ up to (and including) layer
+% % $\B_{\activelabels[x]}$. If the input assigns $0$ to $x=(i,j)$, then by the
+% % canonical rule the run moves from some state $(rs,cs)$ with $i\notin rs$ and
+% % $j\notin cs$ to the state $(rs\cup\{i\}, cs\cup\{j\})$. In particular, after
+% % reading $x=0$ we have $i \in rs$ and $j \in cs$ in the current state component.
+
+% % Now consider the later layer $\B_{\activelabels[y]}$:
+% % \begin{itemize}
+% % \item If $y$ shares row with $x$ (i.e., $i=i'$), then $i \in rs$ holds at this
+% % layer whenever $x=0$ was read earlier. Hence, by the canonical rule, reading
+% % $y=0$ forces a transition to the reject state. Thus assignments with $x=0$ and
+% % $y=0$ are rejected.
+% % \item If $y$ shares column with $x$ (i.e., $j=j'$), then analogously $j \in cs$
+% % holds whenever $x=0$ was read earlier, and reading $y=0$ forces rejection.
+% % \end{itemize}
+
+% % Conversely, if the input does \emph{not} assign $0$ to both endpoints, then at
+% % most one of the conditions ``$i\in rs$'' or ``$j\in cs$'' relevant for the edge
+% % can be triggered by the earlier endpoint, and the canonical rule permits the
+% % later endpoint to be read consistently (in particular, if the later endpoint is
+% % read as $1$, the state does not change; if it is read as $0$, it is permitted
+% % exactly when neither the corresponding row nor column is already in thin ice).
+
+% % Therefore, intersecting with the edge-filter OBDD
+% % $\ODD^{\{x,y\}}$ removes exactly those strings with $x=y=0$, and the minimized
+% % result recognizes exactly the witness set after introducing $\{x,y\}$. Moreover,
+% % the minimized result is recognized by an OBDD of the canonical $(rs,cs)$ form for
+% % the updated active induced graph $G_p$, since the canonical transition structure
+% % enforces all rook edges among active vertices in the same row or column. Denote
+% % this minimized OBDD by $\ODD_p$.
+
+% % \smallskip
+% % \noindent\textbf{Forget-vertex nodes.}
+% % Let $p$ be a forget-vertex node forgetting a vertex $x=(i,j)$ and let $p'$ be
+% % its child. By induction, $\Witnesses(p')=\Lang(\ODD_{p'})$ for an OBDD of the
+% % canonical $(rs,cs)$ form with the appropriate size-accounting in the final layer.
+
+% % The symbolic operation $\symbforgetvertex{x}$ is implemented by (i) separating
+% % the language of $\ODD_{p'}$ into the sublanguages with $x=0$ and with $x=1$,
+% % (ii) incrementing the size labels by $1$ on the $x=1$ branch, (iii) taking the
+% % union, and (iv) contracting away the layer $\B_{\activelabels[x]}$ (as specified
+% % in Appendix~\ref{subsec:FrgProof}). None of these steps introduces new
+% % $(rs,cs)$-indexed states. Hence the resulting minimized OBDD again has the
+% % canonical state space and satisfies the same width bound.
+
+% % Here immediacy is used as follows: a vertex is forgotten only after all its
+% % incident edges have been introduced, so no future constraint depends on the
+% % value of $x$. Thus contracting away the layer for $x$ yields exactly the
+% % DP-core witness update and does not require introducing additional state.
+
+% % \smallskip
+% % \noindent\textbf{Join nodes.}
+% % Let $p$ be a join node with children $p_1,p_2$ sharing the same active label map
+% % $\activelabels$. By induction, $\Witnesses(p_1)$ and $\Witnesses(p_2)$ are
+% % recognized by OBDDs $\ODD_{p_1}$ and $\ODD_{p_2}$ over the canonical $(rs,cs)$
+% % transition structure (with possibly different size labels in the final layer).
+% % The symbolic join operation is performed as defined in the appendix ``Join''
+% % paragraph: it aggregates size components for witnesses with identical string
+% % components using the intermediate OBDDs $\ODD^{\scriptcap}$ and $\ODD^{\scriptcup}$
+% % and returns $\minODD(\ODD^{\scriptcap}\cup\ODD^{\scriptcup})$. This construction
+% % does not alter the underlying string-acceptance transition structure, only the
+% % size labels in the final layer. Hence it preserves the canonical state space and
+% % the width bound.
+
+% % \smallskip
+% % We have shown that at every node $p$ of $\treedec$ the witness set computed by
+% % the {\sc Vertex Cover} DP-core is recognized by an OBDD whose state space is the
+% % canonical $(rs,cs)$ family (plus reject), and therefore has width bounded above
+% % by $\Theta\!\left(\frac{2^{2n}}{\sqrt{n}}\right)$. This establishes the claimed
+% % upper bound on $\sw(\dpcore,\treedec)$.
+% % \end{proof}

@@ -1,0 +1,115 @@
+\section{Preliminaries}
+
+\subsection{Basics}
+We let $\N:= \{0,1, \ldots \}$ be the set of {\em natural numbers}, 
+and $\Nplus:= \N \setminus \{0\}$ be the set of positive natural numbers. 
+For each $n \in \N$ we set $[n]:=\{1,2, \ldots,n\}$. According to this notation,
+$[0]:= \emptyset$. For each $\w \in \Nplus$, we let $\dbset{\w}:= \{0,1,\ldots,
+\w-1\}$. 
+
+
+A \emph{ranked alphabet} is a finite and nonempty set of symbols $\Sigma$ together with an associated arity function $\arityfunction : \Sigma \rightarrow \N$, specifying the arity of each symbol in $\Sigma$. The arity of $\Sigma$, denoted by $\arityfunction(\Sigma)$, is the
+maximum arity of a symbol in $\Sigma$. A \emph{term} over $\Sigma$ is a pair $\term = (\treeT, \lambda)$ where $\treeT$ is a tree, and $\lambda: \nodes{\treeT} \rightarrow \Sigma$ is a function that labels each node $\nodep \in \nodes{\treeT}$ with a symbol from $\Sigma$ whose arity is equal to the number of children of $\nodep$. In particular, leaf nodes are labeled with symbols of arity $0$. 
+
+We define a \emph{graph} as a pair $\graphG = (\vertexset,\edgeset)$, where $\vertexset \subset \N$ is a finite set of \emph{vertices}, and $\edgeset \subseteq \binom{\vertexset}{2}$ is a set of \emph{edges}.
+% We define a \emph{graph} as a triple $\graphG = (\vertexset,\edgeset,\rho)$, where $\vertexset \subset \N$ is a finite set of \emph{vertices}, $\edgeset \subset \N$ is a finite set of \emph{edges} and $\rho \subset \edgeset \times \vertexset$ is an incidence relation. 
+We may write $\vertexset_\graphG$ and $\edgeset_\graphG$ to denote the vertex and edge sets of a graph $\graphG$, respectively. The \emph{empty graph} is the graph $(\emptyset,\emptyset)$.\todo{Do we need to specify the empty graph?}
+% We may write $\vertexset_\graphG$, $\edgeset_\graphG$ and $\rho_\graphG$ to denote sets $\vertexset$, $\edgeset$ and $\rho$. We define the \emph{empty graph} as the graph $(\emptyset,\emptyset,\emptyset)$ with neither vertices, nor edges. 
+A \emph{graph invariant} is a function $\inv$ that maps each graph to a number in $\N$ such that $\inv(G) = \inv(G')$ for every pair of isomorphic graphs $G$ and $G'$. \todo{Do we need this notion?}
+
+
+
+\subsection{Ordered decision diagrams} 
+We let $\Sigma$ be an alphabet and $\ODDwidth \in \N$. A  $(\Sigma, \ODDwidth)$\emph{-layer} is a subset $B \subseteq \dbset{\ODDwidth} \times \Sigma \times \dbset{\ODDwidth}$. We denote the \emph{domain} of $B$ by $\Dom(B):= \{q \;|\; (q,s,q') \in B\}$ and the \emph{image} of a layer by $\im(B):= \{q \;|\; (q',s,q) \in B\}$. We may alternatively refer to set $\Dom(B)$ of a layer as its \textit{left states} and set \textit{$\im(B)$} as its \textit{right states}.
+\todo{Check Terminology that is in use.}
+
+We let  $\B(\Sigma, \ODDwidth)$ denote the set of all $(\Sigma,\ODDwidth)$-layers. A $(\Sigma,\ODDwidth)$\emph{-ordered decision diagram} of length $l$ is a string $D = B_1B_2\ldots B_l \in {\B(\Sigma, \ODDwidth)}^l$. We let $\B(\Sigma,\ODDwidth)^{+} = \bigcup_{l\in \N_+}\B(\Sigma,\ODDwidth)^{l}$, and $\allodds(\Sigma) = \bigcup_{\ODDwidth\in \N_+} \B(\Sigma,\ODDwidth)^+$. 
+\\ 
+A $(\Sigma,\ODDwidth)$-ordered decision diagram is referred to as an \emph{ordered binary decision diagram} (from here on referred to as an OBDD) when alphabet $\Sigma$ is set to be the binary alphabet, $\{0,1\}$. We say that a string $s=s_1 s_2 \ldots s_k$ over $\Sigma$ is read by $D$ if there is a sequence $(q_0, s_1,q_1)(q_1,s_2,q_2)\ldots(q_{k-1},s_k,q_k)$ where for each $i \in [k]$, $(q_{i-1},s_i,q_i) \in B_i$. If additionally $q_k = 1$ and $s$ has length $l$, then we say that string $s$ is accepted by $\ODD$. The language of $\ODD$ is the set $\Lang(\ODD)= \{s\; | \; s \text{ is accepted by } D\}$. Note that we can always assume that for each $i \in [l] \setminus \{1\}$, $\Dom(B_i) = \im(B_{i-1})$. \
+\\
+The size of an ODD $\ODD = \B_1\B_2\dots \B_n$, denoted by $|\ODD|$ 
+is defined as $|\ODD| = |\Dom(\B_1)|+\sum_{i\in [n]} |\im(B_i)|$. The width 
+of $\ODD$ is defined as $\ODDwidth(\ODD) = \max\{|\im(\B_i)|\}$. 
+\\ 
+An ODD $\ODD$ is deterministic if $\Dom(B_1) = \{0\}$ and for each $i \in [l]$, for each $q \in \Dom(B_i)$, and each $a \in \Sigma$ there is a unique $q'\in \im(B_i)$ such that $(q,s,q') \in B_i$. $D$ is said to be complete, if for each 
+$i\in [l]$, each $q\in \Dom(B)$, and each $s\in \Sigma$, 
+there is a $q'\in \im(B)$ such that $(q,s,q')\in B$.
+
+Next, we review a few standard results on OBDDs that will be needed in subsequent sections. The following is a seminal result regarding OBDD minimization (see \cite{bryant1986graph, bryant1992symbolic}).
+\begin{theorem}\label{theorem:Minimize}
+For each OBDD $\ODD$ of width $\omega$ and length $l$, one can construct in time $2^{O(\omega)}\cdot l$ an OBDD $\ODD^{\texttt{min}}$ with minimum number of states such that $\Lang(\ODD) = \Lang(\ODD^{\texttt{min}})$. If $\ODD$ is deterministic, $\ODD^{\min}$ can be constructed in time $O(\omega\cdot l)$. 
+\label{theorem:}
+\end{theorem}
+
+Given an OBDD $\ODD$ we let $\minODD(\ODD)$, be the minimized OBDD $\ODD^{\texttt{min}}$ such that $\Lang(\ODD) = \Lang(\ODD^{\texttt{min}})$.
+
+Next, we record a standard closure property of OBDDs under union and intersection, together with the corresponding width and construction-time bounds (see \cite{bryant1986graph}).
+
+\begin{lemma}\label{lem:obdd-union-intersection}
+Let $D_1$ and $D_2$ be OBDDs of length $\ell$ and widths $w_1$ and $w_2$,
+respectively, over the same alphabet and variable order. Then there exist OBDDs
+\[
+D^{\scriptcap} \;=\; D_1 \cap D_2
+\qquad\text{and}\qquad
+D^{\scriptcup} \;=\; D_1 \cup D_2
+\]
+such that $\Lang(D^{\scriptcap})=\Lang(D_1)\cap\Lang(D_2)$ and
+$\Lang(D^{\scriptcup})=\Lang(D_1)\cup\Lang(D_2)$. Moreover,
+$D^{\scriptcap}$ and $D^{\scriptcup}$ can be constructed in time
+$O(w_1 w_2\,\ell)$ and each has width at most $w_1 w_2$.
+\end{lemma}
+
+Let $\ODD = \B_1\B_2\cdots \B_\ell \in \B(\Sigma,\ODDwidth)^\ell$ be an ODD.
+We say that $\ODD$ has \emph{nondeterministic degree} $d\in\N_+$ if there exists
+an index $j\in[\ell]$ such that:
+\begin{enumerate}
+    \item Every layer $\B_i$ with $i\neq j$ is deterministic, and
+    \item For the (unique) nondeterministic layer $\B_j$, for every
+    $q\in\Dom(\B_j)$ and every symbol $a\in\Sigma$, there are at most $d$ states
+    $q'\in\im(\B_j)$ such that $(q,a,q')\in \B_j$.
+\end{enumerate}
+
+
+\begin{lemma}[Lemma 1 in \cite{alferov2022}]\label{lem:nondet-degree}
+Let $\ODD \in \B(\Sigma,\ODDwidth)^\ell$ be an ODD of nondeterministic degree $d$.
+Then one can construct, in time $\ell\cdot \ODDwidth^{O(d)}$, a deterministic ODD
+$\ODD'$ with a minimum number of states such that
+$\Lang(\ODD')=\Lang(\ODD)$.
+\end{lemma}
+
+
+
+
+\subsection{$k$-instructive Tree Decompositions} \todo{I think we should either explain what a tree decomposition is fully or describe it briefly and refer to a textbook for the details.} In this work, we adopt a formulation of tree decompositions that is particularly
+well suited to a formal, functional, and symbolic treatment.
+Namely, we employ the notion of $k$-\emph{instructive tree decompositions}, which are terms encoding tree decompositions of width at most $k$ \cite{From2023}. For a
+standard introduction to tree decompositions and treewidth, we refer the reader
+to \cite{BlueBook}.
+
+\begin{definition}\label{def:InstructiveAlphabet}
+For each $k \in \N$, we let
+\begin{align}\nonumber
+    \Sigma_k = \{\leaflabel, \introvertexlabel{u},\forgetvertexlabel{u},
+    \introedgelabel{u}{v},\joinlabel | u,v\in [k+1],u\neq v\}
+\end{align}
+where $\leaflabel$ is a symbol of arity $0$, $\introvertexlabel{u}$, $\forgetvertexlabel{u}$ and $\introedgelabel{u}{v}$ are symbols of arity $1$, and $\joinlabel$ is a symbol of arity $2$. We refer to $\Sigma_k$ as the $k$-instructive alphabet.
+\end{definition}
+
+Terms over $\Sigma_k$ can be regarded as instructions to inductively construct graphs. Each node $p$ of a $k$-instructive tree decomposition $\term$ corresponds to a graph $G(\nodep)$ and a set $\activelabelsatnode{\nodep} \subseteq [k+1]$ of \emph{active labels}. In the base case, the instruction $\leaflabel$, which labels each leaf of $\term$, creates an empty graph with an empty set of active labels. Now, suppose that $\nodep$ is a node with a single child $\nodep'$, and let 
+$G(p') = (V_G,E_G)$ and $\activelabelsatnode{\nodep'}$ be the graph, and set of of active labels associated with $p'$. For any \textit{inactive} label, $u \in [k+1]\setminus \activelabelsatnode{\nodep'}$, instruction $\introvertexlabel{u}$ adds a new vertex to $V_G$, labels it with $u$, and adds $u$ to the set of active labels, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} \cup \{\activelabelu\}$. For any $u \in \activelabelsatnode{p'}$, instruction $\forgetvertexlabel{u}$ erases the label from the current vertex labeled with $u$, and removes $u$ from the set of active labels, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} \setminus \{\activelabelu\}$ . The intuition is that the label $u$ is now free and can be used in the creation of a new vertex. For each two distinct labels $u,v \in \activelabelsatnode{\nodep'}$, the instruction $\introedgelabel{u}{v}$ creates a new edge between the current vertex labeled $u$ and the current vertex labeled $v$. The set of active labels $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'}$ remains the same. 
+Finally, suppose that $\nodep$ has two children $\nodep'$ and $\nodep''$. If $\activelabelsatnode{\nodep'} = \activelabelsatnode{\nodep''}$, then the instruction $\joinlabel$ creates a new graph by identifying, for each $u \in \activelabelsatnode{p'}$, the vertex of $G(p')$ labeled $u$ with the vertex of $G(p'')$ labeled $u$. Additionally, in this case, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} = \activelabelsatnode{\nodep''}$.
+
+
+The next theorem, whose proof can be found in \cite{From2023} states that $k$-instructive tree decompositions correspond precisely to graphs of treewidth at most $k$. 
+
+\begin{theorem}[Lemma 6 in \cite{From2023}]
+    Let $\mathcal{T}$ be a $k$-instructive tree decomposition over $\Sigma_k$, for a graph $G$. Graph $G$ has treewidth at most $k$.
+\end{theorem}
+
+
+
+
+
+
+
+

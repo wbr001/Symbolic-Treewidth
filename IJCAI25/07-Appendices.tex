@@ -1,0 +1,483 @@
+
+
+% \begin{figure*}[b]
+%     %\centering
+%     \begin{subfigure}{0.48\textwidth}
+%         \centering
+%          \resizebox{\textwidth}{!}{\input{IJCAI25/Figures/Instructions/clique_instr_max_layers_solved_to_unsolved_ratio.pgf}}
+%             %\caption{Clique - \% of OBDDs with $x$ layers which occurred in solved instances}
+%         %\label{fig:clique}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.48\textwidth}       
+%     \centering
+%     \resizebox{\textwidth}{!}{\input{Figures/Instructions/grid_instr_max_layers_solved_to_unsolved_ratio.pgf}}
+%         %\caption{Grid - \% of OBDDs with $x$ layers which occurred in solved instances}
+%         %\label{fig:grid}
+%     \end{subfigure}
+%     \caption{ Percentage of solutions solved for each decomposition width $x$. Left: On instances obtained from the clique graph, our symbolic algorithm was  able to solve all instances of up to width 50. Right: Our symbolic algorithm was able to solve all instances of up to width 70.   \label{fig:comparisonPercentage}}
+  
+% \end{figure*}
+
+
+\section{Dynamic Programming Cores}\label{DPcores}
+
+%\todo[inline]{This paragraph needs to be rewritten fro clarity.}
+In this work, we will consider a dynamic programming algorithm over a $k$-instructive tree decomposition to operate using a functional framework known as the Dynamic Programming Core (DP-core) \cite{Baste2022,From2023} framework. 
+%We showcase the DP-core framework below in describing a function for each symbol of $\Sigma_k$ that updates a set of partial solutions at a given node.
+This framework assigns to each node of a k-instructive tree decomposition a set of local witnesses in accordance with the instruction at that node. Intuitively, a local witness $\witness \in \{0,1\}^*$, assigned to a node is a binary string recording a partial solution at that node.
+%We describe the components of a DP-core below.
+
+A DP-core operating on $k$-instructive tree decompositions is a record $\dpcore[k]$ consisting of the following components, where $\activelabelu,\activelabelv \in [k+1]$, and 
+$\activelabelu\neq \activelabelv$. 
+
+
+\begin{itemize}
+    \item $\leaf$, is a finite non-empty subset of ${\{0,1\}^*}$;
+    \item $\introvertex{\nodeu}:2^{[k]}\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\introedge{\nodeu}{\activelabelv}:2^{[k]}\times\{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\forgetvertex{\nodeu}:2^{[k]}\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\join:2^{[k]}\times \{0,1\}^*\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$.
+    \item $\final:\{0,1\}^*\rightarrow \{0,1\}$. 
+    \item $\inv:2^{\{0,1\}^*}\rightarrow \N$. 
+\end{itemize}
+%
+
+We extend the functions 
+%\todo{defined above} 
+defined above from witnesses to witness sets as follows. 
+
+\begin{definition}
+Given a set  $b \subseteq 2^{[k]}$ and subsets $S, S'\subset \{0,1\}^*$, 
+%
+%\todo[inline]{the best visually is to leave the = sign near the function, and use double-dollar signs for the union.}
+\begin{itemize}
+    \item $\introvertex{\nodeu}(b,S) =$ $$ \bigcup_{w\in S} \introvertex{\nodeu}(b,w)$$ 
+    \item $\introedge{\nodeu}{\activelabelv}(b,S) =$ $$  \bigcup_{w\in S} \introedge{\nodeu}{\activelabelv}(b,w)$$
+    \item $\forgetvertex{\nodeu}(b,S) =$ $$ \bigcup_{w\in S}\forgetvertex{\nodeu}(b,w)$$
+    \item $\join(b,S,S') =$ $$ \bigcup_{w\in S,w' \in S' } \join(b,w,w')$$
+\end{itemize}
+\end{definition}
+
+
+
+
+
+%Further, for each $S\subseteq \{0,1\}^*$, we define: 
+%\begin{align}
+%    \introvertex{\nodeu}(S) = \bigcup_{\witness\in S} \introvertex{\nodeu}(\witness)
+%\end{align}
+%The extension of the remaining functions  to subsets of strings is defined analogously.
+
+The above functions can be used to specify dynamic programming algorithms operating on $k$-instructive tree decompositions of graphs. The algorithm processes such a tree decomposition $\treedec = (\treeT,\lambda)$ from the leaves towards the root, assigning to each node $\nodep\in \nodes{\treeT}$ a finite subset of strings $\dynamization(\nodep)$ according to the following inductive process. 
+
+\begin{definition}[Dynamization]\label{Dynamization}
+$ $
+\begin{enumerate}
+\item If $\nodep$ is labeled $\leaflabel$ then $\dynamization(\nodep) = \leaf$%$\dynamization(\nodeu) = \emptyset$. 
+\item If $\nodep$ is an internal node of $\treedec$ with a unique child $\nodep'$, then 
+\begin{enumerate}
+    \item $\dynamization(\nodep) = \introvertex{\activelabelu}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\introvertexlabel{\activelabelu}$. 
+    \item $\dynamization(\nodep) = \forgetvertex{\activelabelu}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\forgetvertexlabel{\activelabelu}$.
+    \item $\dynamization(\nodep) = \introedge{\activelabelu}{\activelabelv}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\introedgelabel{\activelabelu}{\activelabelv}$. 
+\end{enumerate}
+\item If $\nodep$ is labeled $\joinlabel$ and has children $\nodep'$ and $\nodep''$, then $\dynamization(u) = \join(\activelabelsatnode{\nodep},\dynamization(\nodep'),\dynamization(\nodep''))$. 
+\end{enumerate}
+\end{definition}
+
+The DP-Core $\dpcore$ accepts a $k$-instructive tree decomposition  $\treedec$ if the set 
+$\dynamization(\rootfunction{\treedec})$ associated with the root node of $\treedec$ contains a final witness, 
+that is, a string $w$ such that $\final(w)=1$. The DP-Core $\dpcore$ is coherent if for 
+each graph $\graph$ of treewidth at most $k$, and each two $k$-instructive tree 
+decomposition $\treedec,\treedec'$ of $\graph$, $\dpcore$ accepts $\treedec$ if and only if 
+it accepts $\treedec'$. We say that a coherent DP-core $\dpcore$ computes a graph invariant 
+$\invariant$ if $\inv(\dynamization(\rootfunction{\treedec})) = \invariant(\graph)$ for each $k$-instructive tree decomposition $\treedec$ of $\graph$. 
+
+
+%\todo[inline]{Suggestion: Replace $\activelabelsatnode_p$ with $B(p)$}
+
+%\textbf{Extension to sets:}
+%\begin{itemize}
+%\item $IntroVertex{u}(S) =  \bigcup_{w} IntroVertex{u}(w)$
+%\end{itemize}
+
+%\textbf{Clean Function:}
+%$Clean:2^{{0,1}*}\rightarrow 2^{{0,1}^*}$ is a function that cleans redundant witnesses. 
+
+
+
+
+\subsection{Example: A DP-Core for Vertex Cover}
+\label{subsection:VC}
+%\todo[inline]{In the definition of DP-core used here, $\activelabels$ is not part of the witness. $\activelabels$ is passed as an argument for the functions. So we do not need to store it in the witness. You can write that the functions are only defined on pairs of the form $(b,s\cdot t)$  where $|s|=|\activelabels|$. On the other hand, we do need an ordering of the labels. This ordering should be done in the OBDD level, not in the witness level. This needs to be discussed, before making any modification. }
+
+
+Next, we define a witness for the {\sc Vertex Cover} DP-core. Such a witness at a node $\nodep$ of a k-instructive tree decomposition is a string of the form $ s\cdot t$ where $s$ is a binary string of length $|\activelabelsatnode{\nodep}|$ and represents a subset of active labels forming a partial solution, while $t$ is a number representing the size of the solution.\footnote{Number $t$ can further be encoded as a binary string and thus fully conform with the definition of our DP-core functions but for the sake of clarity of exposition we elect to represent it as a number.} We may refer to $s$ as the \textit{string component} and number $t$ as the \textit{size component} of the witness. The subset represented by $s$ depends on the set of labels $\activelabels \subseteq [k+1]$, that are active at a given node of the the tree decomposition. More specifically, let $l_1 < ... < l_{|s|}, l_i \in \activelabels(\nodep)$ be the active labels at a given node $\nodep$. Then the set represented by $s$ is $Active(s) = \{l_j \;:\; s_j=1\}$. For instance, let
+$\activelabelsatnode{\nodep} = \{2,4,5\}$ be the set of active labels at node $p$, then $s=101$ represents the set $\{2,5\}$ while $s'=011$ represents the set $\{4,5\}$.  
+%We let $S\oplus u$ be the string representing $Active(S)$}
+
+Given a label $\activelabelu \in [k+1]$ and set of labels $\activelabels \subseteq [k+1]$ we let $\activelabels[\activelabelu] = |\{\activelabelv < \activelabelu : \activelabelv \in \activelabels \}|+1$ denote the index $\activelabelu$ takes in $\activelabels \cup \activelabelu$ when this set is ordered in ascending order. 
+
+\begin{definition}[Vertex Cover DP-core] \label{VCDP-core}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels. The components of the {\sc Vertex Cover} DP-core are defined as follows:
+\begin{enumerate}
+%\item $\leaf = \{(\emptyset,0)\}$
+\item \label{VCDP-coreLeaf}$\leaf = \{0\}$
+
+%\item $\introvertex{\activelabelu}(\activelabels,s\cdot t) = 
+%\{(S\oplus_p [u,0])\cdot t, (S \oplus_p [u,1])\cdot t\}$
+%\item $\introvertex{\activelabelu}(\activelabels,s t) = \{\sigma t | \sigma_i = s_i, i \in \activelabels^{<}_\activelabelu, \sigma_j = s_j, j \in \activelabels^{>}_\activelabelu, s_{\activelabels^{=}_\activelabelu} \in \{0,1\} \}$
+\item \label{VCDP-coreIntroVertex}$\introvertex{\activelabelu}(\activelabels,s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|} t) \\= \{s_1\dots s_{\activelabels[\activelabelu]-1}\thickspace\textbf{x}\thickspace s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|} t | \textbf{x} \in \dbset{2}\}$
+
+%\item $\forgetvertex{\activelabelu}(\activelabels, st) = 
+%\left\{\begin{array}{l}
+%\{\sigma\tau | \sigma_i = s_i, i \in \activelabels^{<}_\activelabelu, \sigma_{j-1} = s_j, j \in \activelabels^{>}_\activelabelu \setminus \activelabels^{=}_\activelabelu, \tau = t+1\} \mbox{ if $s_{\activelabels^{=}_\activelabelu} = 1$} \\ 
+%\{\sigma t | \sigma_i = s_i, i \in \activelabels^{<}_\activelabelu, \sigma_{j-1} = s_j, j \in \activelabels^{>}_\activelabelu \setminus \activelabels^{=}_\activelabelu\} \mbox{ otherwise.} 
+%\end{array}\right. $
+\item \label{VCDP-coreForgetVertex}$\forgetvertex{\activelabelu}(\activelabels,s_1\negthickspace\dots\negthinspace s_{\activelabels[\activelabelu]\negthinspace-\negthinspace1}s_{\activelabels[\activelabelu]}s_{\activelabels[\activelabelu]\negthinspace+\negthinspace1}\negthickspace\dots\negthinspace s_{|\activelabels|} t) \\ = 
+\left\{\begin{array}{l}
+\{s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|} \tau | \tau = t\negthickspace+\negmedspace1\} \mbox{ if $s_{\activelabels[\activelabelu]} = 1$} \\ 
+\{s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|} t\} \mbox{ otherwise.} 
+\end{array}\right. $
+
+%\item $\introedge{\activelabelu}{\activelabelv}(p,S\cdot t) = \left\{\begin{array}{l}
+%\emptyset \mbox{ if $\activelabelu \notin S \land \activelabelv \notin S $} \\ 
+%\{S\cdot t\} \mbox{ otherwise.} 
+%\end{array}\right. $
+%\{(S,s) \;|\; (S,s) \in P_b, (u \in S) \lor (v \in S) \}
+\item \label{VCDP-coreIntroEdge}$\introedge{\activelabelu}{\activelabelv}(\activelabels,st) \\= \left\{\begin{array}{l}
+\emptyset \mbox{ if $ s_{\activelabels[\activelabelu]} = 0 \land s_{\activelabels[\activelabelv]} = 0 $} \\ 
+\{st\} \mbox{ otherwise.} 
+\end{array}\right. $
+
+%\item $\join(p, S_1\cdot t_1,S_2\cdot t_2)) = \left\{
+%\begin{array}{l}
+%\emptyset \mbox{ if $S_1\neq S_2$} \\ 
+%\{S_1\cdot (t_1+t_2)\} \mbox{ otw.} 
+%\end{array}\right.$
+%$\{(S, s_1 + s_2 - |S|) \;|\; (S, s_1) \in P_{b_1} \land (S, s_2) \in P_{b_2}\}$
+\item \label{VCDP-coreJoin}$\join(\activelabels, s_1\cdot t_1,s_2\cdot t_2) \\= \left\{
+\begin{array}{l}
+\emptyset \mbox{ if $s_1\neq s_2$} \\ 
+\{s_1\tau | \tau = t_1 + t_2\} \mbox{ otherwise} 
+\end{array}\right.$
+
+\end{enumerate}
+
+    
+\end{definition}
+
+
+%\todo[inline]{Explain in the text the meaning of each of the operations}
+
+%Operation $\leaf$ in the above DP-core for Vertex Cover produces a witness consisting of single letter string $0$ representing a the empty solution of size $0$.
+%Operation $\introvertex{\activelabelu}$ produces two new strings, each being modifications of the input string where respectively $0$ and $1$ is inserted at position $\activelabels[\activelabelu]$ and characters beyond position $\activelabels[\activelabelu]$ are shifted forward.
+%Operation $\forgetvertex{\activelabelu}$ outputs the input string without change if symbol at index $\activelabels[\activelabelu]$ is zero and outputs a modification of the input string where size $t$ of the input witness is incremented by $1$ if the symbol at position $\activelabels[\activelabelu]$ is $0$.
+%Operation $\introedge{\activelabelu}{\activelabelv}(\activelabels,st)$ returns the empty set if symbols at positions $\activelabels[\activelabelu]$ and $\activelabels^\activelabelv$ are both $0$, and otherwise outputs the input string unchanged.
+%Operation $\join$ returns the empty set if the two input strings are not identical in the first $|\activelabels|$ positions and otherwise returns a string identical to each of the input strings in the first $|\activelabels|$ positions and with solutions size equal to the sum of the solution sizes of the input strings.
+
+The operation $\leaf$ in the above DP-core for {\sc Vertex Cover} produces a witness consisting of a single-character string \texttt{0}, representing an empty solution of size 0.
+
+The operation $\introvertex{\activelabelu}$ generates two new strings by modifying the input string: one with a \texttt{0} and the other with a \texttt{1} inserted at the position corresponding to $\activelabels[\activelabelu]$, while shifting all subsequent characters one place to the right.
+
+The operation $\forgetvertex{\activelabelu}$ either:
+\begin{itemize}
+    \item Removes the symbol at $\activelabels[\activelabelu]$ and increments the solution size \(t\) by 1 if the symbol is \texttt{1}, or
+    \item Removes the symbol at index $\activelabels[\activelabelu]$ if the symbol is \texttt{0} leaving the size component unchanged.
+\end{itemize}
+
+The operation $\introedge{\activelabelu}{\activelabelv}$ returns the empty set if both symbols at positions $\activelabels[\activelabelu]$ and $\activelabels[\activelabelv]$ are \texttt{0}. Otherwise, it outputs the input string unchanged.
+
+Finally, the operation $\join$ returns the empty set if the two input strings differ in their first $|\activelabels|$ characters. Otherwise, it returns a witness with identical string component, with the size component updated to the sum of the two input sizes.
+
+
+
+
+\begin{comment}
+
+We next specify these above functions for the case of the {\sc Vertex Cover} problem to exhibit the DPcore framework. Under textbook dynamic programming, algorithms assign a set of partial solutions to each node of a tree decomposition of graph inductively from the leaves to the root. These sets of partial solutions are typically represented in the form of a set of tuples $P$ where each tuple $(S,t) \in P$ consists of a partial solution, $S$, and the size associated to that partial solution, $t$. In general, when solving a problem over $k$-instructive tree decompositions, the set $S \subseteq \activelabelsatnode$ at a node is a subset of the set of active labels at that  node, while $t \in \N$ is a natural number. The DP-core for {\sc Vertex cover} below is specified using such tuples. A translation from these tuples to strings is given subsequently to show that these functions indeed conform with the DPcore definition.
+
+
+
+
+
+\todo[inline]{After defining what $\toBin(S,t)$ means, define the DP-core using the notation $\toBin(S,t)$}
+
+\noindent\textbf{Vertex Cover:}
+Let $\treedec$ be a $k$-instructive tree decomposition for a graph $G$. For an arbitrary subset of active labels $S \subseteq \activelabelsatnode$ of $\treedec$, a number $t \in \N$ and labels $\activelabelu, \activelabelv \in [k+1]$, 
+\begin{itemize}
+\item $\leaf = \{(\emptyset,0)\}$
+\item $\introvertex{\activelabelu}(S,t) = \{(S,t),(S \cup \{u\}, t)\}$
+\item $\forgetvertex{\activelabelu}(S,t) = \left\{\begin{array}{l}
+\{(S \setminus \activelabelu, t+1)\} \mbox{ if $\activelabelu \in S$} \\ 
+\{(S,t)\} \mbox{ otherwise.} 
+\end{array}\right. $
+\item $\introedge{\activelabelu}{\activelabelv}(S,t) = \left\{\begin{array}{l}
+\emptyset \mbox{ if $\activelabelu \notin S \land \activelabelv \notin S $} \\ 
+\{(S,t)\} \mbox{ otherwise.} 
+\end{array}\right. $
+
+%\{(S,s) \;|\; (S,s) \in P_b, (u \in S) \lor (v \in S) \}
+\item $\join((S_1,t_1),(S_2,t_2)) = \left\{
+\begin{array}{l}
+\emptyset \mbox{ if $S_1\neq S_2$} \\ 
+\{(S_1,t_1+t_2)\} \mbox{ otw.} 
+\end{array}\right.$
+
+%$\{(S, s_1 + s_2 - |S|) \;|\; (S, s_1) \in P_{b_1} \land (S, s_2) \in P_{b_2}\}$
+\end{itemize}
+
+
+The above DP core can be rewritten to operate in accordance with the definition of a DP core using binary encodings of partial solutions. We specify such an encoding as follows:
+
+Given a $k$-ITD $\treedec = (\treeT,\lambda)$ and a node $\nodep$ of $ \treeT$ with associated set of active labels $\activelabelsatnode_\nodep$, a partial solution $(S,t)$ can be translated to a string $st$, consisting of the concatenation of a $|\activelabelsatnode_\nodep|$ length binary string $s = s_1\dots s_{|\activelabelsatnode_\nodep|}$ and natural number $t$, the size associated to the partial solution\footnote{This number could further be encoded as a binary string and thus fully conform with the definition of our DPcore functions but for the sake of clarity we elect to represent it as a number.}. We make use of the following correspondence map $\pi_\nodep: \activelabelsatnode_\nodep \rightarrow [|\activelabelsatnode_\nodep|] $, associating and active label in $\activelabelsatnode_\nodep$ to positions in string $s$:
+$$\pi_\nodep(\activelabelu) = |\{\activelabelv \in \activelabelsatnode_\nodep:\activelabelv \leq \activelabelu\}|$$
+
+Binary string $s = s_1 \dots s_{|\activelabelsatnode_\nodep|}$ indicates which active labels take part of a partial solution $(S,t)$ by taking value $1$ at position $i \in [|\activelabelsatnode_\nodep|]$ when $\pi_\nodep(\activelabelu) = i$ for some $\activelabelu \in S$. We describe the correspondence between a partial solutions $(S,t)$ at a node $\nodep$ and its representation as a string $st$ more formally with the function $\beta_\nodep: 2^{\activelabelsatnode_\nodep} \times \N \rightarrow \{0,1\}^* \times \N$: 
+$$\beta_\nodep(S,t) = s_1\dots s_{|\activelabelsatnode_\nodep|}t, \mbox{where $s_i = 1$ iff $\pi_\nodep^{-1}(i)\in S$} $$
+
+ Having defined translation map $\beta$, our DP-core for {\sc Vertex Cover} may be 
+
+
+\iffalse
+Before fixing an encoding of these tuples to binary strings we first specify a map $\pi_{\activelabelsatnode}: [k+1] \rightarrow [k+1] \cup \infty$ for each set of active labels $\activelabelsatnode \subseteq [k+1]$, assigning positions in a string as follows: 
+\[ 
+\pi_\activelabelsatnode(\activelabelu)=
+\begin{cases} 
+      |\activelabelsatnode_\activelabelu| & \text{if } \activelabelu \in \activelabelsatnode \\
+      \infty & \text{otherwise}
+      \end{cases}
+\]
+
+Intuitively, the above map orders the set of active labels $\activelabelsatnode$ such that $\pi_\activelabelsatnode(\activelabelu) < \pi_\activelabelsatnode(\activelabelv)$ by mapping the active labels onto the first $|\activelabelsatnode|$ natural numbers.
+
+With that, we may now specify an encoding $\toBin_\activelabelsatnode:2^{[k]} \times [n]  \rightarrow \{0,1\}^*$ from partial solutions of the form $(S,t)$, to binary strings as follows,
+
+$$\toBin_\activelabelsatnode(S,t) = x_1x_2\dots x_{|\activelabelsatnode|}t^*$$
+
+where:
+\begin{enumerate}
+    \item $\pi_\activelabelsatnode(x_i) = i$
+    \item $x_i = 1$ iff $x_i \in S$
+    \item $t^* = t \setminus |S|$ 
+\end{enumerate}
+
+%Here we will consider strings in $\{0,1\}^*$ to encode partial solutions consisting of tuples in the form $(S,t)$ where $S \subseteq \activelabelsatnode$ is a subset of active labels and $t \in \N$ is a number indicating the size of the partial solution. The particularities of this encoding are not important as long as it is fixed. 
+
+\fi
+
+\todo[]{I would recommnend not to do the transtation on the fly in the core because it gets very difficult to read. }
+
+\noindent\textbf{Vertex Cover:}
+Let $\treedec$ be a $k$-instructive tree decomposition for a graph $G$. For an arbitrary node $\nodep$ of $\treedec$ with parent $\nodep'$ and labels $\activelabelu, \activelabelv \in [k+1]$, 
+
+\begin{itemize}
+    \item $\leaf = \{0\}$
+    \begin{itemize}
+        \item Function $\leaf$ can be regarded as a a constant function returning the singleton set $\{st\}$ where $s$ is the empty string and $t$ is $0$.
+    \end{itemize}
+    
+
+\item $\introvertex{\activelabelu}(s_1\dots s_{|\activelabelsatnode_\nodep|}t) = \{\x_1 \dots \x_{|\activelabelsatnode_{\nodep'}|}t: \x_i\negthickspace =\negmedspace s_i, \x_{\pi_{\nodep'}(\activelabelu)}\negmedspace \in\negmedspace \dbset{2}, \x_{j+1}\negmedspace =\negmedspace s_j, i \in [\pi_{\nodep'}(\activelabelu) -1], j \in [\pi_{\nodep'}(\activelabelu)+1,\ldots,|\activelabelsatnode|] \}$
+\begin{itemize}
+    \item Function $\introvertex{\activelabelu}$ produces two new strings $s't$ and $s''t$, each of length one greater than the input string, where a $1$ is inserted in position $\pi_{\nodep'}(\nodeu)$ of $s'$ and a $0$ is inserted in position $\pi_{\nodep'}(\nodeu)$ of $s''$. 
+\end{itemize}
+
+\item $\forgetvertex{\activelabelu}(s_1\dots s_{|\activelabelsatnode_\nodep|}t) = \{\x_1\dots \x_{|\activelabelsatnode_{\nodep'}|}t: \x_i = s_i, i \in [\pi_\nodep(\activelabelu) -1], \x_{j} = s_{j+1}, j \in [\pi_{\nodep'}(\activelabelu),\ldots,|\activelabelsatnode_{\nodep'}|], t' = t + s_{\pi_{\nodep'}(\activelabelu)}\}$
+
+\item$\introedge{\activelabelu}{\activelabelv}(st) = \left\{\begin{array}{l}
+\emptyset\thickspace \mbox{ if $s_{\pi_{\nodep}(\activelabelu)} = 0 \land s_{\pi_{\nodep}(\activelabelv)} = 0 $} \\ 
+\{st\}\thickspace \mbox{ otherwise.} 
+\end{array}\right. $
+
+\item $\join(st,s't') = \left\{
+\begin{array}{l}
+\emptyset\thickspace \mbox{ if $s\neq s'$} \\ 
+\{st^*:t^* = t+t'\}\thickspace \mbox{ otherwise.} 
+\end{array}\right.$
+\end{itemize}
+\end{comment}
+
+
+
+%Then using those rules using dynamic programming get set of all solutions
+
+
+
+%\subsection{Statements for the OBDDs}
+
+%begin{lemma}
+%Let $D$ be an OBDD accepting a language $S$. $IntroVertex{u}(D)$ accepts the language $Clean(IntroVertex{u}(S))$. 
+%\end{lemma}
+
+
+
+
+
+
+
+
+
+
+\section{Proof of Correctness of our Symbolic Vertex Cover Algorithm}
+
+
+
+\subsection{Main Lemma}
+
+The correctness of the symbolic vertex cover algorithm devised in Section \ref{Symbolic Vertex Cover (sketch)} follows immediately by the following lemma, which states an equivalence between the symbolic operations presented in Section \ref{Symbolic Vertex Cover (sketch)} and the components of the {\sc Vertex Cover} DP-core of definition \ref{VCDP-core}. More specifically, we show that each of these symbolic operations constructs an OBDD whose accepted language matches the set of witnesses generated by the corresponding DP-core component, for any given set of active labels $\activelabels \subseteq [k+1]$ associated with a node of a $k$-instructive tree decomposition.
+
+\begin{lemma}
+\label{lemma:mainLemma}
+    Given a set of active labels $\activelabels \subseteq [k+1]$ and OBDDs $\ODD$ and $\ODD'$ of length $|\activelabels|+1$, the following equivalences hold:
+\begin{enumerate}[label=\arabic*.,left=0pt,labelsep=2pt]
+\item \label{mainLeaf} $\leaf = \Lang(\symbleaf)$
+\item \label{mainIntroVertex} $\introvertex{\activelabelu}(\activelabels, \Lang(\ODD)) = \Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD))$
+\item \label{mainIntroEdge}$\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD)) = \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD))$
+\item \label{mainForgetVertex} $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD)) = \Lang(\symbforgetvertex{\activelabelu}(\activelabels,\ODD))$
+\item \label{mainJoin} $\join(\Lang(\ODD),\Lang(\ODD')) = \Lang(\symbjoin(\ODD,\ODD'))$
+\end{enumerate}
+\end{lemma}
+
+The proof of Lemma \ref{lemma:mainLemma} will be carried out in the following subsections. 
+
+
+\subsection{Leaf Nodes}
+
+In this subsection we prove point (\ref{mainLeaf}) of Lemma \ref{lemma:mainLemma} stating that the language of OBDD $D$ produced by symbolic operation $\symbleaf$ is equal to the set $\leaf$ specified in the {\sc Vertex Cover} DP-core.
+
+
+\begin{lemma}
+\label{lemma:SymbolicLeaf}
+    $\leaf = \Lang(\symbleaf)$. 
+\end{lemma}
+\begin{proof}
+    OBDD $\symbleaf = \ODD$ only accepts the string $0$ by construction/definition so $\Lang(\symbleaf) = \{0\}$. Meanwhile, since $\leaf =  \{0\}$ also by definition, then $\leaf = \Lang(\symbleaf)$.
+\end{proof}
+
+
+\subsection{Intro Vertex Nodes}
+
+Next we show that symbolic construction, $\symbintrovertex{\activelabelu}$, exactly captures the change in the witness set prescribed by the corresponding operation $\introvertex{\activelabelu}$, as stated by point (\ref{mainIntroVertex}) of Lemma~\ref{lemma:mainLemma}.
+
+\begin{lemma}
+\label{lemma:IntroVertexAppendix}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels, $\ODD$ an OBDD of length $|\activelabels|+1$ and $\activelabelu$ a label in $[k+1]\negthinspace\setminus \negthinspace\activelabels$. Then  $\introvertex{\activelabelu}(\activelabels, \Lang(\ODD))  = \Lang(\symbintrovertex{\activelabelu}(\activelabels, \ODD))$.
+\end{lemma}
+\begin{proof}
+Let $\ODD = \B_1\dots B_{|\activelabels|+1}$ and let $\symbintrovertex{\activelabelu}(\activelabels, \ODD)= \ODD' = \B'_1\dots B'_{|\activelabels|+1}$.
+We choose arbitrarily a witness $\sigma\tau$ from $\introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ and show that it is accepted by $\ODD'$. 
+
+By point (\ref{VCDP-coreIntroVertex}) of Definition \ref{VCDP-core}, we may assume that $\sigma\tau$, is in the image of $\introvertex{\activelabelu}(\activelabels, st)$ for some witness $st$ with identical size component ($t=\tau$) and that $st$ is accepted by OBDD $\ODD$. Moreover, letting $s = s_1\dots s_{|\activelabels| +1}$ and $\sigma = \sigma_1 \dots \sigma_{|\activelabels|+2}$, we know that $s_1 = \sigma_1, \ldots, s_{\activelabels[\activelabelu]-1} = \sigma_{\activelabels[\activelabelu]-1}, s_{\activelabels[\activelabelu]} = \sigma_{\activelabels[\activelabelu]+1}, \ldots, s_{|\activelabels| + 1} = \sigma_{|\activelabels|+2}$ and we may assume without loss of generality that $\sigma_{\activelabels[\activelabelu]} = 1$. Since $st$ is accepted by $\ODD$ we know that there exists a path $p_1$, starting from the initial state in $\B_1$ and ending in state $q$ in the image of $\B_{\activelabels[\activelabelu]-1}$ reading string $s_1\dots s_{\activelabels[\activelabelu]-1}$. Likewise, there exists a path $p_2$, starting at state $q$ in the domain of $\B_{\activelabels[\activelabelu]}$ and ending at the accept state of final layer $\B_{|\activelabels|+1}$ reading string $s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|}t$. 
+Since by definition  $\B'_i =\B_i$ for $i \in [\activelabels[\activelabelu]-1]$ and that $ \B'_{j+1}=\B_j$ for $j \in \{\activelabels[\activelabelu], \ldots, |\activelabels|+1\}$, we know that path $p_1$ exists also in $\ODD'$ from layer $\B'_1$ to layer $\B'_{\activelabels[\activelabelu] - 1}$ and path $p_2$ exists in $\ODD'$ from layer $\B'_{\activelabels[\activelabelu]+1}$ to layer $\B'_{|\activelabels|+2}$. It remains only to show that transition $(q,1,q)$ exists in $\B'_{\activelabels[\activelabelu]}$ which is the case by definition and we conclude that witness $\sigma\tau$ belongs to the language of $\ODD'$. Since $\sigma\tau$ was chosen arbitrarily, we conclude that $\introvertex{\activelabelu}(\activelabels, \Lang(\ODD))\subseteq \Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD))$.
+
+Next we chose arbitrarily a string $st$ from $\Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD))$ and show that $st \in \introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$.
+
+Since $st$ is accepted by OBDD $\ODD' = \symbintrovertex{\activelabelu}(\activelabels,\ODD)$, there exists a path $p_1$ in $\ODD'$ from layer $\B'_1$ to layer $\B'_{\activelabels[\activelabelu]-1}$ starting from the initial state and ending at some state $q$ reading string $s_1\dots s_{\activelabels[\activelabelu]-1}$. Further, there exists a path $p_2$ in $\ODD'$ from layer $\B'_{\activelabels[\activelabelu]+1}$ to final layer $\B'_{|\activelabels| + 2}$ starting from the state $q$ (since all transitions in $\B'_{\activelabels[\activelabelu]}$ start and end at states of the same label) and ending at the final state reading $s_{\activelabels[\activelabelu] + 1} \dots s_{|\activelabels|+1}t$.
+Hence contracted witness $\sigma\tau= s_1 \dots s_{\activelabels[\activelabelu] - 1}s_{\activelabels[\activelabelu] + 1} \dots s_{|\activelabels|+1}t$ is accepted by OBDD $\ODD$. By definition we know that $\introvertex{\activelabelu}(\activelabels, \sigma\tau)$ contains (both) expanded witnesses where a digit $s^* \in \{0,1\}$ is inserted at position $\activelabels[\activelabelu]$ so $st \in \introvertex{\activelabelu}(\activelabels, \sigma\tau)$ and $st \in \introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$. Since $st$ was chosen arbitrarily, we conclude that $\Lang(\symbintrovertex{\activelabelu}(\activelabels,\ODD)) \subseteq \introvertex{\activelabelu}(\activelabels,\Lang(\ODD))$.
+ 
+
+\end{proof}
+
+
+\subsection{Intro Edge Nodes}
+
+We now turn to the step where an edge is introduced between two vertices, thus requiring that at least one of these vertices is in the cover. The following lemma is a restatement of point (\ref{mainIntroEdge}) of Lemma \ref{lemma:mainLemma} asserting that the symbolic construction $\symbintroedge{\activelabelu}{\activelabelv}$ precisely matches the change in the witness set dictated by $\introedge{\activelabelu}{\activelabelv}$.
+
+\begin{lemma}
+\label{lemma:SymbolicEdgeAppendix}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels, $\ODD$ an OBDD of length $|\activelabels|+1$ and $\activelabelu, \activelabelv$ labels in $\activelabels$. Then  $\introedge{\activelabelu}{\activelabelv}(\activelabels, \Lang(\ODD))  = \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels, \ODD))$.
+\end{lemma}
+
+\begin{proof}
+    We choose arbitrarily a  witness $\sigma\tau \in \introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$ and show that it is accepted by OBDD $\ODD^* = \symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD)$.
+
+    By definition, $\ODD^* = \ODD \cap \ODD^{\{\activelabelu,\activelabelv\}}$ as described in section \ref{section:IntroEdge}. By definition, string $\sigma\tau$ is accepted by OBDD $\ODD$ so we need only show that $\sigma\tau = \sigma_1\dots \sigma_{|\activelabels|}\tau$ is accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}} = \B_1\dots \B_{|\activelabels|+1}$. Since layer $\B_i = \{(0,0,0), (0,1,0)\}$ for $i \in [\activelabels[\activelabelu]-1]$ we know there exists a path $p_1$ in $\ODD^{\{\activelabelu,\activelabelv\}}$ from the initial state in layer $\B_1$ to state $q = 0$ in the image of layer $\B_{\activelabels[\activelabelu]-1}$ reading string $\sigma_1\dots \sigma_{\activelabels[\activelabelu]-1}$. Next we consider the two cases; case 1, where $\sigma_{\activelabels[\activelabelu]} = 0$ and case 2, where $\sigma_{\activelabels[\activelabelu]} = 1$.
+
+    \begin{itemize}
+        \item Case 1: There exists a path $p_2$ from state $0$ in the domain of layer $\B_{\activelabels[\activelabelu]}$ to state $0$ in the image of layer $\B_{\activelabels[\activelabelv]-1}$ reading string $\sigma_{\activelabels[\activelabelu]}\dots \sigma_{\activelabels[\activelabelv]-1}$. Since $\sigma\tau \in \introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$ we know that $\sigma_{\activelabels[\activelabelv]} = 1$. Therefore, OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ reads $\sigma_{\activelabels[\activelabelv]}$ with transition $(0,1,1)$ in layer $\B_{\activelabels[\activelabelv]}$. Finally, there exists a path $p_3$ reading $\sigma_{\activelabels[\activelabelv] + 1}\dots \sigma_{|\activelabels|}\tau$, starting at state $q=1$ of the domain of layer $\B_{\activelabels[\activelabelv] + 1}$ and ending at the final state. Hence, $\sigma\tau$ is accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$.
+        
+        \item Case 2: There exists a path $p_2$ from state $0$ in the domain of layer $\B_{\activelabels[\activelabelu]}$ to state $1$ in the image of layer $\B_{\activelabels[\activelabelv]-1}$ reading string $\sigma_{\activelabels[\activelabelu]}\dots \sigma_{\activelabels[\activelabelv]-1}$. At layer $\B_{\activelabels[\activelabelv]}$ OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ reads $\sigma_{\activelabels[\activelabelv]}$ with either transition $(1,0,1)$ or $(1,1,1)$. Finally, there exists a path $p_3$ reading  $\sigma_{\activelabels[\activelabelv] + 1}\dots \sigma_{|\activelabels|}t$, starting at state $q=1$ of the domain of layer $\B_{\activelabels[\activelabelv] + 1}$ and ending at the final state. Hence, $\sigma\tau$ is accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$
+    \end{itemize}
+
+    Since $\sigma\tau$ is accepted by both OBDD $\ODD$ and OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$, it follows that $\sigma\tau$ is accepted by OBDD $\ODD^*$. Since $\sigma\tau$ was chosen arbitrarily we conclude that $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD)) \subseteq \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD))$.
+
+    Next, we choose arbitrarily a string $st$ accepted by OBDD $\ODD^*$ and show that it belongs to the set $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$.
+
+    Since $st$ is accepted by OBDD $\ODD^* = \ODD \cap \ODD^{\{\activelabelu,\activelabelv\}}$, we know that it is also accepted by OBDD $\ODD$ and hence belongs to the language $\Lang(\ODD)$. Following point (\ref{VCDP-coreIntroEdge}) of  definition \ref{VCDP-core} for $\introedge{\activelabelu}{\activelabelv}$, we need only check that $st$ tales value $1$ at either $s_{\activelabels[\activelabelu]}$ or $s_{\activelabels[\activelabelv]}$. Suppose contrarily that $s_{\activelabels[\activelabelu]} = s_{\activelabels[\activelabelv]} = 0$. Then string $st$ would not have been accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ as it cannot be accepted by OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$. OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ would namely read $s_{\activelabels[\activelabelu]}$ with transition $(0,0,0)$ at layer $\B_{\activelabels[\activelabelu]}$. Consequently, OBDD $\ODD^{\{\activelabelu,\activelabelv\}}$ would read up to $s_{\activelabels[\activelabelv] - 1}$ taking appropriately transitions $(0,0,0)$ or $(0,1,0)$ of layers $\B_i, i \in \{\activelabels[\activelabelu]+1,\ldots,\activelabels[\activelabelv]-1\}$ and reading $s_{\activelabels[\activelabelv]}$ with transition $(0,0,0)$ at layer $\B_{\activelabels[\activelabelv]}$. Finally, $s_{\activelabels[\activelabelv]+1}\dots s_{|\activelabels|}t$ is read by path $p$ starting at state $q=0$ in the domain of layer $\B_{\activelabels[\activelabelv]+1}$ and ending in the reject state of the final layer. This is a contradiction to the assumption that $st$ is accepted by OBDD $\ODD^*$ and therefore we may conclude that string $st$ takes value $1$ in at least one of positions $s_{\activelabels[\activelabelu]}$ or $s_{\activelabels[\activelabelv]}$ and belongs to set $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD))$. Since $st$ was chosen arbitrarily we conclude that $\Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD)) \subseteq \introedge{\activelabelu}{\activelabelv}(\activelabels, \Lang(\ODD))$ and therefore $\introedge{\activelabelu}{\activelabelv}(\activelabels,\Lang(\ODD)) = \Lang(\symbintroedge{\activelabelu}{\activelabelv}(\activelabels,\ODD))$.
+    
+\end{proof}
+
+\subsection{Forget Vertex Nodes}
+
+Next, we examine the operation that removes an already introduced vertex from the set of active labels. The following lemma restates point~(\ref{mainForgetVertex}) of Lemma~\ref{lemma:mainLemma}, showing that the symbolic construction $\symbforgetvertex{\activelabelu}$ exactly reflects the adjustment to the witness set prescribed by $\forgetvertex{\activelabelu}$.
+
+\begin{lemma}
+\label{lemma:SymbolicForgetVertexAppendix}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels, $\ODD$ an OBDD of length $|\activelabels|+1$ and $\activelabelu$ a label in $\activelabels$. Then  $\forgetvertex{\activelabelu}(\activelabels, \Lang(\ODD))  = \Lang(\symbforgetvertex{\activelabelu}(\activelabels, \ODD))$.
+\end{lemma}
+
+
+\begin{proof}
+    We choose arbitrarily a  witness $\sigma\tau\in \forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ and show that it is accepted by OBDD $\ODD^* = \symbforgetvertex{\activelabelu}(\activelabels,\ODD)$.
+
+    Since $\sigma\tau \in \forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ we know that for some $st$ accepted by $\ODD = \B_1\dots \B_{|\activelabels|+1}$ it is the case that $\sigma\tau \in \forgetvertex{\activelabelu}(\activelabels,st)$. Moreover, $st = s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|}t$ where removing $s_{\activelabels[\activelabelu]}$ results in string component $\sigma$, i.e. $s_1\dots s_{\activelabels[\activelabelu]-1} s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|-1} = \sigma$. Assume without loss of generality that $s_{\activelabels[\activelabelu]} = 1$ and hence $t = \tau - s_{\activelabels[\activelabelu]} = \tau - 1$ by the definition of $\forgetvertex{\activelabelu}$. We first show that intermediate witness $s\tau$ is accepted by $\ODD^{\activelabels[\activelabelu]=1} = \B_1'\dots\B_{|\activelabels|+1}'$. By definition the first $\activelabels[\activelabelu] -1$ layers of $\ODD$ and $\ODD^{\activelabels[\activelabelu]=1}$ are identical and therefore there exists a path $p_1$ in $\ODD^{\activelabels[\activelabelu]=1}$ from the initial state in layer $\B'_1$ to some right state $q$ of $\B_{\activelabels[\activelabelu]-1}'$ reading string $s_1\dots s_{\activelabels[\activelabelu]-1}$. 
+    By definition, all transitions labeled $1$ in $\B_{\activelabels[\activelabelu]}$ exist also in layer $\B_{\activelabels[\activelabelu]}'$ and so $s_{\activelabels[\activelabelu]}$ is read at this layer. Further, there exists a path $p_2$ reading $s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|}$ from layer $\B_{\activelabels[\activelabelu]+1}'$ to layer $\B_{|\activelabels|}'$ ending at some state $p$, since by definition $\B_i \subseteq \B_i'$ for $i \in \{\activelabels[\activelabelu]+1,\ldots,|\activelabels|\}$. Finally, since there necessarily exists some transition $(p,t,1)$ in $\B_{|\activelabels|+1}$, transition $(p,\tau,1)$ exists in $\B_{|\activelabelsatnode{\nodep}|+1}'$ by definition. Hence, $s\tau$ is accepted by $\ODD^{\activelabels[\activelabelu]=1}$. Contraction of OBDD $\ODD^{\activelabels[\activelabelu]=1} \cup \ODD^{\activelabels[\activelabelu]=0}$, $\ODD^*$ preserves paths $p_1$ and $p_2$ and so reads string $s_1\dots s_{\activelabels[\activelabelu]-1} s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|-1} = \sigma$ and consequently accepts witness $\sigma\tau$. A corollary argument holds for the case of $s_{\activelabels[\activelabelu]} = 0$. Since $\sigma$ was chosen arbitrarily we conclude that $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD)) \subseteq \Lang(\symbforgetvertex{\activelabelu}(\activelabels,\ODD))$.
+
+    Next we choose arbitrarily a witness $st$ accepted by OBDD $\ODD^* = \symbforgetvertex{\activelabelu}(\activelabels,\ODD)$ and show that it is in the language $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$. 
+
+    %By definition there exists some witness $\sigma t = \sigma_1\dots\sigma_{\activelabels[\activelabelu]-1}\sigma_{\activelabels[\activelabelu]}\sigma_{\activelabels[\activelabelu]+1}\dots\sigma_{|\activelabels|}t$ where $ \sigma_1\dots\sigma_{\activelabels[\activelabelu]-1}\sigma_{\activelabels[\activelabelu]+1}\dots\sigma_{|\activelabels|}=s$ and $\sigma t$ is accepted by $\ODD^{\activelabels[\activelabelu]=1} \cup \ODD^{\activelabels[\activelabelu]=0}$.
+
+    Let witness $st = s_1\dots s_{|\activelabels|-1}t$ and $\ODD^* = B_1^*\dots \B_{|\activelabels|}^*$. 
+    By assumption there exists paths $p_1$ and $p_2$ in $\ODD^*$ from the initial state in layer $\B_1$ to a right state $q$ in $\B_{\activelabels[\activelabelu]-2}$ and from a left state $q'$ in $\B_{\activelabels[\activelabelu]+1}$ to the final state in $\B_{|\activelabels|}$ reading $s_1\dots s_{\activelabels[\activelabelu]-2}$ and $ s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|-1}t$ respectively. Since by definition the first $\activelabels[\activelabelu]-2$ layers of $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$ are identical a those of $\ODD^*$, path $p_1$ exists in $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$. Also, since by definition layers $\B_{\activelabels[\activelabelu]+1}$ to $\B_{|\activelabels|+1}$ are identical to layers $\B_{\activelabels[\activelabelu]}^*$ to $\B_{|\activelabels|}$ path $p_2$ exists in $\ODD^*$ as well. Since $st$ is accepted by $\ODD^*$ we know that there must exist a transition $(q, l, q')$ for $l\in \{0,1\}$ in Layer $\B_{\activelabels[\activelabelu]-1}^*$. By the construction of $\ODD^*$ there mus exist a path $p_3$ from left state $q$ in $\B_{\activelabels[\activelabelu]-1}$ to right state $q'$ in $\B_{\activelabels[\activelabelu]}$. Path $p_1, p_3, p_2$ in $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$ therefore accepts witness $\sigma t $ where $\sigma = = s_1\dots s_{\activelabels[\activelabelu]-1}l s_{\activelabels[\activelabelu]-1}\dots s_{|\activelabels|}$. Consequently, by the construction of $\ODD^{\activelabels[\activelabelu]=1}\cup\ODD^{\activelabels[\activelabelu]=0}$, witness $\sigma\tau$ where $\tau = t-l$ is accepted by input OBDD $\ODD$. Hence by point (\ref{VCDP-coreForgetVertex}) of Definition \ref{VCDP-core} $st$ is in $\forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$.
+    %By lemma \ref{ForgetVertexLemma} $s't = s_1'\dots s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)-1}'s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)'} s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)+1}'\dots s_{|\activelabelsatnode{\nodep}|}t$ is accepted by $\ODD_0 \cup \ODD_1$ where $s_1'\dots s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)-1}' s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)+1}'\dots s_{|\activelabelsatnode{\nodep}|}t = st$. 
+    %Assume without loss of generality that $s_{\activelabels[\activelabelu]} = 1$ and so $\sigma t$ is accepted by $\ODD^{\activelabels[\activelabelu]=1}$. By definition the first $\activelabels[\activelabelu]-1$ layers of $\ODD$ and $\ODD^{\activelabels[\activelabelu]=1}$ are identical and therefore there exists a path $p_1$ in $\ODD^{\activelabels[\activelabelu]=1}$ from the initial state in layer $\B_1'$ to some state $q$ in the image of $\B_{\activelabels[\activelabelu]-1}$ reading string $\sigma_1\dots s_{\activelabels[\activelabelu]-1}'$. By definition, all transitions labeled $1$ in $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}$ exist also in layer $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}'$ and vice versa so $s_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}'$ is read at layer $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)}$. Further, there exists a path $p_2$ from layer $\B_{\pi_\activelabelsatnode{\nodep}(\activelabelu)+1}'$ to layer $\B_{|\activelabelsatnode{\nodep}|}'$ ending in at some state $p$ and this path in particular does not include a state $|\Dom(\B_i)|$ for $i \in \{{\pi_\activelabelsatnode{\nodep}(\activelabelu)}+1,\ldots,|\activelabelsatnode{\nodep}|\}$ (otherwise $s't$ would go on to be rejected). By definition, this path therefore uses only transitions existing in $\B_i$  for $i \in \{{\pi_\activelabelsatnode{\nodep}(\activelabelu)}+1,\ldots,|\activelabelsatnode{\nodep}|\}$. Finally, since there necessarily exists some transition $(p,t,a)$ in $\B_{|\activelabelsatnode{\nodep}|+1}'$, transition $(p,t',a)$ necessarily must exists in $\B_{|\activelabelsatnode{\nodep}|+1}$ by definition. Hence, $s't'$ is accepted by $\ODD$ and therefore $st$ is in the language of $\forgetvertex{\activelabelu}(\Lang(\ODD))$ by the definition of $\forgetvertex{\activelabelu}(s't')$.
+    Since $st$ was chosen arbitrarily we conclude that $\Lang(\symbforgetvertex{\activelabelu}(\activelabels,\ODD)) \subseteq \forgetvertex{\activelabelu}(\activelabels,\Lang(\ODD))$ and therefore $\forgetvertex{\activelabelu}(\activelabels, \Lang(\ODD)) = \Lang(\symbforgetvertex{\activelabelu}(\activelabels, \ODD))$.
+\end{proof}
+
+
+
+
+\subsection{Join Nodes}
+
+Finally, we address the operation that combines the witness sets of two subproblems under a tree decomposition node. The following lemma is a restatement of point~(\ref{mainJoin}) of Lemma~\ref{lemma:mainLemma}, showing how the symbolic construction $\symbjoin$ exactly encodes the union of witnesses required by $\join$.
+
+
+%\begin{lemma}\label{UniquePath}
+%    Every path from the initial state of $\ODD^{\scriptcup}$ to some state $q$ in the image of layer %$\B_{|\activelabelsatnode{\nodep}|}^\scriptcup$ reads a unique string.
+%\end{lemma}
+
+
+
+\begin{lemma}
+\label{lemma:SymbolicJoin}
+Given length $l$ OBDDs $\ODD_1$ and $\ODD_2$, $\join(\Lang(\ODD_1),\Lang(\ODD_2)) = \Lang(\symbjoin(\ODD_1,\ODD_2))$.
+\end{lemma}
+
+\begin{proof}
+    We choose arbitrarily a  string $st \in \join(\Lang(\ODD),\Lang(\ODD'))$ and show that it is accepted by OBDD $\ODD^* = \symbjoin(\ODD,\ODD')$.
+    By the definition of $\join$ we know that there exists strings $s_1t_1$ and $s_2t_2$ accepted by OBDDs $\ODD$ and $\ODD'$ respectively, such that $\join(st_1,st_2) = st$. Consequently, we know that $s_1 = s_2 = s$ and $t_1 +t_2 = t$. We now distinguish between two cases: case 1, where $t_1 = t_2$ and case 2, where $t_1 \neq t_2$.
+    \begin{itemize}
+        \item Case 1: We will show that $st$ is accepted by $\ODD^\scriptcap = B_1^{\scriptcap},\ldots,B_{|\activelabels|+1}^{\scriptcap}$ and therefore by $\symbjoin(\ODD_1,\ODD_2)$. In this case, strings $s_1t_1$ and $s_2t_2$ are identical so we know that they are accepted by OBDD $\ODD_1 \cap \ODD_2 = B_1,\ldots,B_{|\activelabels|+1}$. Since by definition the first $|\activelabelsatnode{\nodep}|$ layers of $\ODD_1 \cap \ODD_2$ and $\ODD^\scriptcap$ are identical we know that there exists a path from the initial state in $\B^\scriptcap_1$ to some state $q$ of layer $\B_{|\activelabels|}^\scriptcap$ reading $s_1$. We know that some transition $(q,t_1,a)$ exists in $\B_{|\activelabels|+1}$ and therefore by definition transition $(q,t_1+t_2,a)$ exists in layer $\B_{|\activelabels|+1}^\scriptcap$ and $st$ is read by $\ODD^\scriptcap$ and therefore also $\symbjoin(\ODD_1,\ODD_2)$.
+        
+        \item Case 2: We will show that $st$ is accepted by $\ODD^\scriptcup$ and therefore by $\symbjoin(\ODD_1,\ODD_2)$. By definition, the first $|\activelabels|$ layers of $\ODD_1 \cup \ODD_2$ and $\ODD^\scriptcup$ are identical. Further, (assuming OBDD $\ODD_1 \cup \ODD_2$ is minimized) we know as a direct consequence of determinism that there exists a unique path from the initial state in $\B^\scriptcup_1$ to some state $q$ of layer $\B_{|\activelabels|}^\scriptcup$ reading $s_1$. Since both $st_1$ and $st_2$ are accepted by $\ODD_1 \cup \ODD_2$ it is necessarily the case that transitions $(q, t_1, a)$ and $(q,t_2,a)$ exist in $\B_{|\activelabels|+1}$ and therefore by definition transition $(q,t_1 + t_2,a)$ exists in $\B_{|\activelabels|}^\scriptcup$. Hence string $st$ is accepted by $\ODD^\scriptcup$ and therefore also by $\symbjoin(\ODD_1,\ODD_2)$.
+    \end{itemize}
+
+    Since $st$ was chosen arbitrarily we conclude that $\join(\Lang(\ODD_1,\ODD_2)\subseteq\Lang(\symbjoin(\ODD_1,\ODD_2))  $
+
+    Next we choose arbitrarily a string $st$ accepted by OBDD $\ODD^* = \symbjoin(\ODD,\ODD')$ and show that it is in the language $\join(\Lang(\ODD),\Lang(\ODD'))$.
+
+    Since $\ODD^* = \symbjoin(\ODD,\ODD') = \ODD^{\scriptcap} \cup \ODD^{\scriptcup}$ we distinguish between the following two cases: case 1, where $st$ is accepted by $\ODD^\scriptcap$ and case 2, where $st$ is accepted by $\ODD^\scriptcup$.
+    \begin{itemize}
+        \item Case 1: We will show that $st'$ where $2 \cdot t' = t$, is accepted by $\ODD_1 \cap \ODD_2 = B_1,\ldots,B_{|\activelabels|+1}$ and therefore belongs to language $\join(\Lang(\ODD_1),\Lang(\ODD_2))$ by definition. The layers of $\ODD^\scriptcap$ and $\ODD_1 \cap \ODD_2$ are by definition identical up to $|\activelabels|$-th layer and so there exists a path $p$ starting at the initial state of $\ODD_1 \cap \ODD_2$ and ending at some state $q$ of the image of layer $\B_{|\activelabels|}$ reading $s$. Since there exists a transition $(q,t,a)$ in layer $\B_{|\activelabels|+1}^\scriptcap$ there must exist transition $(q,t',a)$ in layer $\B_{|\activelabels|+1}$ by the construction of $\ODD^\scriptcap$ and therefore $st'$ is read by $\ODD_1 \cap \ODD_2$. Finally we can conclude from the definition of the $\join$ operation that $st$ belongs to $\join(\Lang(\ODD_1,\ODD_2))$.
+        
+        
+        \item Case 2: In this case we will assume that input OBDDs store only witnesses of smallest size for each witness string component. We will show that there exists strings $st_1$ and $st_2$ where $t_1 + t_2 = t$, that are accepted by $\ODD_1\cup \ODD_2$ (and therefore belongs to set $\join(\ODD_1,\ODD_2)$ since strings $st_1$ and $st_2$ cannot both be accepted by $\ODD_1$ or $\ODD_2$ by our uniqueness assumption). The layers of $\ODD^\scriptcup$ and $\ODD_1 \cup \ODD_2$ are by definition identical up to $|\activelabels|$-th layer and so there exists a path $p$ starting at the initial state of $\ODD_1 \cup \ODD_2$ and ending at some state $q$ of the image of layer $\B_{|\activelabels|}$ reading $s$. By definition there exists transition $(q,t,a)$ in layer $\B_{|\activelabels|+1}^\scriptcup$ and so there must exist transitions $(q,t_1,a)$ and $(q,t_2,a)$ in $\B_{|\activelabels|+1}$ by the construction of $\ODD^\scriptcup$ and therefore both $st_1$ and $st_2$ are accepted by $\ODD_1 \cup \ODD_2$. Note that both cannot be accepted by just one of $\ODD_1$ and $\ODD_2$ as the string with larger weight would have been removed under minimization. Therefore we may assume that $st_1$ is accepted by $\ODD_1$ and $st_2$ is accepted by $\ODD_2$. Finally we can conclude from the definition of the $\join$ operation that $st$ belongs to $\join(\Lang(\ODD_1),\Lang(\ODD_2))$. 
+        
+    \end{itemize}
+
+    Since $st$ was chosen arbitrarily we can conclude that $\Lang(\symbjoin(\ODD_1,\ODD_2)) \subseteq \join(\Lang(\ODD_1,\ODD_2))$.
+
+    Since we have shown that $\Lang(\symbjoin(\ODD_1,\ODD_2)) \subseteq \join(\Lang(\ODD_1),\Lang(\ODD_2))$ and that $\join(\Lang(\ODD_1),\Lang(\ODD_2)) \subseteq \Lang(\symbjoin(\ODD_1,\ODD_2))$ we conclude that $\join(\Lang(\ODD_1),\Lang(\ODD_2)) = \Lang(\symbjoin(\ODD_1,\ODD_2))$.
+     
+\end{proof}

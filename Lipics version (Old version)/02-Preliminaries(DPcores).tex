@@ -1,0 +1,95 @@
+\newpage
+\section{Preliminaries}
+
+\subsection{Basics}
+We let $\N:= \{0,1, \ldots \}$ be the set of {\em natural numbers}, 
+and $\Nplus:= \N \setminus \{0\}$ be the set of positive natural numbers. 
+For each $n \in \N$ we set $[n]:=\{1,2, \ldots,n\}$. According to this notation,
+$[0]:= \emptyset$. For each $\w \in \Nplus$, we let $\dbset{\w}:= \{0,1,\ldots,
+\w-1\}$. 
+
+\subsection{ Ordered decision diagrams} 
+We let $\Sigma$ be an alphabet and $w \in \N$. A  $(\Sigma, w)$\emph{-layer} is a subset $B \subseteq \dbset{w} \times \Sigma \times \dbset{w}$. We denote the \emph{domain} of a layer by $\Dom(B):= \{q \;|\; \exists (a,q'), (,a,q') \in B\}$ and the \emph{image} of a layer by $\im(B):= \{q \;|\; \exists (q',a), (q',a,q) \in B\}$. We let  $\B(\Sigma, w)$ denote the set of all $(\Sigma,w)$-layers. A $(\Sigma,w)$\emph{-ordered decision diagram} (from here on referred to as $(\Sigma,w)$\emph{-ODD}) of length $l$ is a string $D = B_1B_2\ldots B_l \in {\B(\Sigma, w)}^l$. We say that a string $w=w_1 w_2 \ldots w_l$ is accepted by $D$ if there is a sequence $(q_0, w_1,q_1)(q_1,w_2,q_2)\ldots(q_{l-1},w_l,q_l)$ where for each $i \in [l]$, $(q_{i-1},w_i,q_i) \in B_i$ , and $q_l = 1$. The language of $D$ is the set $L= \{w\; | \; w \text{ is accepted by } D\}$. Note that we can always assume that for each $i \in [l] \setminus \{1\}$, $\Dom(B_i) = \im(B_{i-1})$. \
+
+An ODD $D$ is deterministic if $\Dom(B_1) = \{0\}$ and for each $i \in l$, for each $q \in \Dom(B_i)$, each $a \in \Sigma$ there is a unique $q'\in \im(B_i)$ such that $(q,a,q') \in B_i$. $D$ is said to be complete, if for each 
+$i\in [l]$, each $q\in \Dom(B)$, and each $a\in \Sigma$, 
+there is a $q'\in \im(B)$ such that $(q,a,q')\in B$.\\
+
+\subsection{Dynamic programming cores}
+\begin{itemize}
+\item \textbf{Vertex Cover}
+
+Using $P$ as set of local solution. Then $P[n]$ is used for subset of local solution which used n vertices. $b$ as child of node.
+\begin{itemize}
+\item Leaf
+$P = \{(\emptyset,0)\}$
+\item Introduce Vertex
+$P = \{(S \cup \{u\}, s + 1) \;|\; (S,s) \in P_b\} \cup P_b$
+\item Forget Vertex
+$P = \{(S - \{u\}, s) \;|\; (S,s) \in P_b\}$
+\item Introduce edge
+$P = \{(S,s) \;|\; (S,s) \in P_b, (u \in S) \lor (v \in S) \}$
+\item Join
+$P = \{(S, s_1 + s_2 - |S|) \;|\; (S, s_1) \in P_{b_1} \land (S, s_2) \in P_{b_2}\}$
+\end{itemize}
+
+Then using those rules using dynamic programming get set of all solutions
+\end{itemize} 
+
+
+\subsection{Function Notation}
+
+\begin{itemize}
+\item $IntroVertex{u}:{0,1}^*\rightarrow 2^{\{0,1\}^*}$
+\end{itemize}
+
+
+\subsection{Extension to sets}
+
+\begin{itemize}
+\item $IntroVertex{u}(S) =  \bigcup_{w} IntroVertex{u}(w)$
+\end{itemize}
+
+\subsection{Clean Function}
+
+$Clean:2^{{0,1}*}\rightarrow 2^{{0,1}^*}$ is a function that cleans redundant witnesses. 
+
+\subsection{Statements for the OBDDs}
+
+\begin{lemma}
+Let $D$ be an OBDD accepting a language $S$. $IntroVertex{u}(D)$ accepts the language $Clean(IntroVertex{u}(S))$. 
+\end{lemma}
+
+
+
+
+\subsection{Preliminaries}
+
+\noindent{\bf Ordered decision diagrams:} We let $\Sigma$ be an alphabet and $w \in \N$. A  $(\Sigma, w)$\emph{-layer} is a subset $B \subseteq \dbset{w} \times \Sigma \times \dbset{w}$. We denote the \emph{domain} of a layer by $\Dom(B):= \{q \;|\; \exists (a,q'), (,a,q') \in B\}$ and the \emph{image} of a layer by $\im(B):= \{q \;|\; \exists (q',a), (q',a,q) \in B\}$. We let  $\B(\Sigma, w)$ denote the set of all $(\Sigma,w)$-layers. A $(\Sigma,w)$\emph{-ordered decision diagram} (from here on referred to as $(\Sigma,w)$\emph{-ODD}) of length $l$ is a string $D = B_1B_2\ldots B_l \in {\B(\Sigma, w)}^l$. We say that a string $w=w_1 w_2 \ldots w_l$ is accepted by $D$ if there is a sequence $(q_0, w_1,q_1)(q_1,w_2,q_2)\ldots(q_{l-1},w_l,q_l)$ where for each $i \in [l]$, $(q_{i-1},w_i,q_i) \in B_i$ , and $q_l = 1$. The language of $D$ is the set $L= \{w\; | \; w \text{ is accepted by } D\}$. Note that we can always assume that for each $i \in [l] \setminus \{1\}$, $\Dom(B_i) = \im(B_{i-1})$. \
+
+An ODD $D$ is deterministic if $\Dom(B_1) = \{0\}$ and for each $i \in l$, for each $q \in \Dom(B_i)$, each $a \in \Sigma$ there is a unique $q'\in \im(B_i)$ such that $(q,a,q') \in B_i$. $D$ is said to be complete, if for each 
+$i\in [l]$, each $q\in \Dom(B)$, and each $a\in \Sigma$, 
+there is a $q'\in \im(B)$ such that $(q,a,q')\in B$.\\
+
+
+\noindent{\bf Ranked alphabets and Terms :}
+A \emph{ranked alphabet} is defined as finite non-empty set of symbols $\Sigma$ together with an associated arity function $\arityfunction : \Sigma \rightarrow \N$, specifying the arity of each symbol in $\Sigma$. We define the arity of function $\arityfunction{(\cdot)}$ to be the maximum arity of a symbol in $\Sigma$. A \emph{term} over $\Sigma$ is a pair $\term = (\treeT, \lambda)$ where $\treeT$ is an addressed tree, and $\lambda: \nodes{\treeT} \rightarrow \Sigma$ is a function labeling each node $\nodep \in \nodes{\treeT}$ with a symbol of arity $|\child{\nodep}|$ from $\Sigma$. In particular, leaf nodes are labeled with symbols of arity $0$. In the remainder of the text we may write $\nodes{\term}$ to mean $\nodes{\treeT}$, $|\term|$ to mean $|\nodes{\treeT}|$ and $\rootfunction{\term}$ to mean $\rootfunction{\treeT}$. The height of $\term$ is defined to be the height of $\treeT$. By $\terms{\Sigma}$ we denote the set of all terms over $\Sigma$. Given terms $\term_1 = (\treeT_1,\lambda_1), \ldots,\term_\arityr=(\treeT_\arityr,\lambda_\arityr)$ in $\terms{\Sigma}$, and a symbol $\symbola \in \Sigma$ of arity $\arityr$, we let $\symbola(\term_1, \ldots, \term_{\arityr})$ denote the term $\term = (\treeT, \lambda)$ where for some fresh node $\nodeu$ , tree $\treeT$ is the composition of $\nodeu$ and trees $\treeT_1, \ldots, \treeT_\arityr$ and function  $\lambda$ is defined as follows:
+\begin{itemize}
+    \item $\lambda(\nodeu) = \symbola$;
+    \item   $\lambda|_{\nodes{\treeT_i}} = \lambda_i$ for $i \in [\arityr]$.
+\end{itemize}
+
+
+\noindent{\bf Tree decompositions and treewidth}:
+We now introduce the notion of a $k$-\emph{instructive tree decompositions}; terms over a ranked alphabet providing the framework for our reasoning over graphs of bounded treewidth.
+
+\begin{definition}
+For each $k \in \N$, we let
+$$\Sigma_k = \{\leaf, \introvertex{u},\forgetvertex{u},\introedge{u}{v},\join\}| u,v\in [k+1],u\neq v\}$$
+where $\leaf$ is a symbol of arity $0$, $\introvertex{u}$, $\forgetvertex{u}$ and $\introedge{u}{v}$ are symbols of arity $1$, and $\join$ is a symbol of arity $2$. We refer to $\Sigma_k$ as the $k$-instructive alphabet.
+\end{definition}
+The elements of $\Sigma_k$ should be regarded as instructions to inductively construct graphs. The construction of each such graph utilizes an associated set $\activelabels \subseteq [k+1]$ of \emph{active labels}. In the base case, the instruction $\leaf$ creates an empty graph with an empty set of active labels. Now we let $G$ be a graph with associated set of active labels $\activelabels$. For each $u \in [k+1]\setminus \activelabels$, instruction $\introvertex{u}$ adds a new vertex to $V_G$, labels it with $u$, and adds $u$ to $\activelabels$. For each $u \in \activelabels$, instruction $\forgetvertex{u}$ erases the label from the current vertex labeled with $u$, and removes $u$ from $\activelabels$. The vertex $u$ is now free and may be used in the creation of a new vertex. For each $u,v \in \activelabels$, instruction $\introedge{u}{v}$ creates a new edge between the current vertex labeled $u$ and the current vertex labeled $v$. Finally, if two graphs $G$ and $G'$ each have set $\activelabels$ as their active labels, then instruction $\join$ creates a new graph by identifying, for each $u \in \activelabels$, the vertex of $G$ labeled $u$ with the vertex of $G'$ labeled $u$. 
+
+
+
+

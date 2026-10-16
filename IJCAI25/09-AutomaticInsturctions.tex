@@ -1,0 +1,47 @@
+\section{Automatic Instructions}
+
+
+\subsection{Second Order Finite Automata}
+\label{subsection:RegularFunctionClasses}
+
+Recall that we view an OBDD $\D$ of width $\width$ and length $\lengthString$ as 
+a sequence $\D = \B_1\B_2\dots\B_n$ of $\width$-layers. In other words, $\D$ is simply
+a string of length $\lengthString$ over the alphabet $\detCalB(\width)$ of all layers. 
+We note that not every string in the set $\detCalB(\width)^n$ is a valid OBDD
+of length $\lengthString$ and width $\width$, since not all such strings satisfy
+Conditions $1$-$3$ stated in Subsection \ref{subsection:OBDDs}. We let 
+$\detCalB(\width)^{\circ \lengthString}$ denote the set of all strings in 
+$\detCalB(\width)^{\lengthString}$ that {\em are} OBDDs. 
+We let $\detCalB(\width)^{\circledast} = \bigcup_{\lengthString\in \N} \detCalB(\width)^{\circ \lengthString}$ 
+denote the set containing the empty string, and all OBDDs of width at most $\width$.
+The following proposition states that the set $\detCalB(\width)^{\circledast}$ 
+is $2^{\width}$-regular. 
+
+\begin{proposition}
+\label{proposition:RegularityOBDDs}
+For each $\width\in \N$, there is a finite automaton $\functionclassautomaton(\width)$
+with $2^{\width}$ states such that 
+$\Lang(\functionclassautomaton(\width)) =  \detCalB(\width)^{\circledast}$. 
+\end{proposition}
+
+Since each OBDD $\D$ of width at most $\width$ represents a function $\ffunction_{\D}$, a set of OBDDs of width at most $\width$ may be seen as a representation of a function class. That is to say, the class consisting of all functions associated with OBDDs in the set. We will be particularly concerned with function classes that can be finitely represented using finite automata over the alphabet $\detCalB(\width)$. 
+
+\begin{definition}
+\label{definition:SecondOrderFA}
+We say that a finite automaton $\functionclassautomaton$ over
+$\detCalB(\width)$ is a {\em second-order finite automaton} if
+$\Lang(\functionclassautomaton)\subseteq \detCalB(\width)^{\circledast}$. We let 
+$$\classfunctionsF(\functionclassautomaton) = \{\ffunction_{\D}\;:\; \D\in \Lang(\functionclassautomaton)\}$$ be the function class represented by $\functionclassautomaton$. 
+\end{definition}
+
+We say that a function class $\classfunctionsG$ is {\em decisional} if there is some $\width\in \N$ and some second-order finite automaton $\functionclassautomaton$ over $\detCalB(\width)$ such that $\classfunctionsG = \classfunctionsF(\functionclassautomaton)$. 
+
+Let $\width,\width'\in \N$, and let $\classfunctionsG\subseteq \classfunctionsF(\functionclassautomaton(\width))$. We define the width-$\width$ complement of $\classfunctionsG$ as the function class $\overline{\classfunctionsG}^{\width} = \classfunctionsF(\functionclassautomaton(\width))\backslash \classfunctionsG$.
+The next theorem, from \cite{MeloOliveira2022}, states some basic closure and decidability properties for decisional function classes. 
+We note that these properties do not follow directly from usual closure and decidability properties of regular languages. The problem is that several OBDDs of width at most $\width$ may represent the same function. Therefore, it is not in general possible to establish a one-to-one correspondence between functions in $\classfunctionsF(\functionclassautomaton)$ and OBDDs in $\Lang(\functionclassautomaton)$.
+
+\begin{theorem}
+\label{theorem:MeloOliveira}
+Regular function classes are closed under union, intersection, and bounded-width complementation. Furthermore, inclusion and intersection emptiness for regular function classes are decidable.
+\end{theorem}
+

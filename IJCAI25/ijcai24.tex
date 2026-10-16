@@ -1,0 +1,138 @@
+%%%% ijcai24.tex
+
+\typeout{IJCAI--24 Instructions for Authors}
+
+% These are the instructions for authors for IJCAI-24.
+
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
+% The file ijcai24.sty is a copy from ijcai22.sty
+% The file ijcai22.sty is NOT the same as previous years'
+\usepackage{ijcai24}
+
+%\usepackage{subfigure}
+% Use the postscript times font!
+\usepackage{enumitem}
+\usepackage{times}
+\usepackage{soul}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[switch]{lineno}
+
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{todonotes}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{xcolor}
+
+\usepackage{comment}
+\usepackage{pgfplots}
+%\usepackage{lmodern}
+
+\input{IJCAI25/preamble}
+% Comment out this line in the camera-ready submission
+\linenumbers
+
+\urlstyle{same}
+
+% the following package is optional:
+%\usepackage{latexsym}
+
+% See https://www.overleaf.com/learn/latex/theorems_and_proofs
+% for a nice explanation of how to define new theorems, but keep
+% in mind that the amsthm package is already included in this
+% template and that you must *not* alter the styling.
+
+% Following comment is from ijcai97-submit.tex:
+% The preparation of these files was supported by Schlumberger Palo Alto
+% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
+% Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
+% preparation.
+
+% These instructions can be modified and used in other conferences as long
+% as credit to the authors and supporting agencies is retained, this notice
+% is not changed, and further modification or reuse is not restricted.
+% Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
+% contacts for providing assistance without their prior permission.
+
+% To use for other conferences, change references to files and the
+% conference appropriate and use other authors, contacts, publishers, and
+% organizations.
+% Also change the deadline and address for returning papers and the length and
+% page charge instructions.
+% Put where the files are available in the appropriate places.
+
+
+% PDF Info Is REQUIRED.
+
+% Please leave this \pdfinfo block untouched both for the submission and
+% Camera Ready Copy. Do not include Title and Author information in the pdfinfo section
+\pdfinfo{
+/TemplateVersion (IJCAI.2024.0)
+}
+
+\title{Symbolic Dynamic Programming on Tree Decompositions}
+
+% Multiple author syntax (remove the single-author syntax above and the \iffalse ... \fi here)
+
+%\author{
+%Samuel Krempasky$^1$
+%\and
+%Mateus de Oliveira Oliveira$^{1,2}$\and
+%Wim Van den Broeck$^1$\\
+%\affiliations
+%$^1$Department of Informatics, University of Bergen, Norway\\
+%$^2$Department of Computer and Systems Sciences, Stockholm University, Sweden\\
+%\emails
+%\{samuel.krempasky, wim.broeck\}@uib.no,
+%oliveira@dsv.su.se
+%}
+
+\begin{document}
+
+\maketitle
+
+
+\input{IJCAI25/00-Abstract}
+\input{IJCAI25/01-Introduction}
+\newpage $ $
+\newpage 
+\input{IJCAI25/02-Preliminaries}
+\input{IJCAI25/03-SymbolicVertexCover}
+%\input{IJCAI25/04-HighTreewidthLowSymbolicWidth}
+\input{IJCAI25/05-ExperimentalResults}
+%\input{IJCAI25/06-Conclusion}
+
+
+%% The file named.bst is a bibliography style file for BibTeX 0.99c
+%\clearpage
+\bibliographystyle{named}
+\bibliography{ijcai24}
+\appendix
+
+\newpage
+\clearpage 
+
+\input{IJCAI25/07-Appendices}
+%\input{IJCAI25/08-ExperimentsAppendix-Clean}
+%\input{IJCAI25/08-ExperimentsAppendix}
+%\input{IJCAI25/09-AutomaticInstructions}
+
+
+%\input{IJCAI25/00-Planning}
+
+\end{document}
+

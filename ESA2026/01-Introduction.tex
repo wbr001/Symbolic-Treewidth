@@ -1,0 +1,44 @@
+\section{Introduction}
+Treewidth is a graph-theoretic measure that quantifies how tree-like a given graph is. This measure has found fundamental applications in a wide variety of subfields of computer science, such as in the study of constraint satisfaction problems \cite{dalmau2002constraint,samer2010constraint}, knowledge representation \cite{gottlob2010bounded}, graph neural networks \cite{barcelo2021graph}, bayesian networks \cite{elidan2008learning}, etc. In particular, many computationally-hard combinatorial problems arising in these areas can be solved in time $f(k)\cdot n^{O(1)}$ on $n$-vertex graphs of treewidth at most $k$. Here, $f(k)$ is a function that depends only on the treewidth of the graph, but not on its number of vertices. 
+
+One of the most prominent approaches for solving computational problems on graphs parameterized by treewidth is dynamic programming over tree decompositions \cite{Baste2022,From2023,hagerup2000dynamic}. In this setting, the nodes of the tree-decomposition are processed from the leaves towards the root, and a set of strings encoding partial solutions is assigned to each node. The set of strings associated with the root node can then be used to decide whether the problem has a solution on the given graph, and if yes, to find a solution of optimal cost. Such a solution is constructed by backtracking. 
+
+Although dynamic programming algorithms over tree decompositions have found numerous practical applications, these algorithms suffer from two main drawbacks. The first is that the time to process a node of the decomposition is lower-bounded by the number of strings in the set associated with that node. The second\todo{Is this really a drawback? A reviewer might argue that if we consider and $f(k)\cdot n^{O(1)}$ time algorithm solving our combinatorial problem to be efficient then we should also consider an $f(k)\cdot n^{O(1)}$ time algorithm computing treewidth to be efficient.} is that the very process of computing an optimal tree decomposition is expensive, in the sense that the best algorithm for this task runs in time $2^{O(k^2)}\cdot n^{O(1)}$ \cite{korhonen2023improved}, while there are constant-factor approximation algorithms working in time $2^{O(k)}\cdot n$ \cite{korhonen2023single}. 
+
+
+\subsection{Our results}
+
+In this work, we introduce a general framework that integrates dynamic programming on tree decompositions with symbolic computation. More specifically, we introduce the notion of a \emph{symbolic dynamic programming core}, a formalism that allows one to define dynamic programming algorithms where sets of strings representing partial solutions are encoded implicitly, using ordered-binary decision diagrams (OBDDs). The key point is that the size of an OBDD representing a set $S$ may be drastically smaller than the number of strings in $S$. For instance, while the set $\{0,1\}^k$ contains $2^k$ strings, it admits an OBDD of size $O(k)$. 
+%In the case of dynamic programming algorithms it is reasonable to use OBDDs to represent sets of partial solutions because the inductive process used to construct these sets introduces a lot of redundancies. 
+This compression is particularly well suited to dynamic programming on decompositions, where local witness sets are generated inductively and typically contain substantial structural repetition and redundancy that OBDDs can exploit.
+
+Symbolic representations of solution sets do, however, present several new technical challenges compared with explicit DP algorithms. First, in explicit DP models, the chosen encoding of partial solutions does not significantly impact computational complexity, while for symbolic approaches, small details in encoding can drastically affect the width of the OBDDs representing the set of partial solutions for a given node. A poor choice of representation may lead to an exponential blow-up in OBDD size. Moreover, to obtain efficient algorithms, the OBDD at each node must be constructible in time polynomial in the sizes of the child OBDDs, which calls for careful OBDD operations that keep intermediate representations compact.
+
+As a concrete example of our symbolic approach, we devise a \emph{symbolic dynamic programming core} for the {\sc Vertex Cover} problem \cite{chen2024vertex,cai2017finding}. A vertex cover of a graph $G$ is a set of vertices that is incident with all edges of $G$. In the {\em Vertex Cover} problem, we are given a graph $G$, and the goal is to find a minimum-size vertex cover. Our symbolic algorithm is guaranteed to work in time $2^{O(k)}\cdot n^{\BigO(1)}$\todo{I'm not sure we can guarantee this. I am sure we can guarantee $2^{O(k)}\cdot n^{\BigO(1)}$}, where $n$ is the size of the graph and $k$ is the width of the input decomposition. Nevertheless, depending on the instance, the algorithm may work significantly more efficiently because of the efficient representation of sets of partial witnesses using OBDDs. We evaluated our algorithm experimentally on random graphs, obtained by deleting vertices from two classes of graphs that have high treewidth: clique graphs, and grid graphs. We also test our algorithm on rook graphs; a fast growing, high treewidth, grid-like graph family admitting factorially many optimal solutions to {\sc Vertex Cover} in its grid dimensions. In all cases, the sizes of the obtained representations were orders of magnitude smaller than the number of partial witnesses associated with a node of the input decomposition. Finally, we note that our algorithm is also quite resilient to the width of the decomposition used to guide the dynamic programming process. In particular instead of constructing optimal tree decompositions, which is an expensive process, we run our algorithm in the naively constructed path-decompositions, where vertices are introduced in lexicographical\todo{Revieweer comment: With respect to which labels?} order, edges are introduced as soon as the corresponding pairs of vertices have been introduced, and vertices are forgotten as soon as there is no more edge to be introduced. 
+
+\subsection{Related Work}
+
+The closest work to ours is the dissertation of Charwat~\cite{Charwat2017BDD},
+which develops binary-decision-diagram-based dynamic programming on tree
+decompositions, primarily with applications to QBF (Quantified Boolean Formula)
+solving, a PSPACE-complete problem. The high-level idea is similar to ours where
+rather than storing dynamic-programming tables explicitly, sets of partial
+assignments are represented symbolically by decision diagrams. Charwat also
+presents problem specific BDD-based dynamic programming algorithms over tree decompositions for
+several NP-hard problems, with BDD sizes bounded by $\BigO(2^{k\ell})$ at each
+bag, where $k$ is the width of the decomposition and $\ell$ is the number of
+variables associated with each bag element.
+
+{\sc Vertex Cover} is one of the canonical problems in parameterized
+complexity, and has played a central role in the development of bounded-search
+tree algorithms, kernelization, and branch-and-reduce techniques
+\cite{NemhauserTrotter1975,DBLP:conf/alenex/Abu-KhzamCFLSS04,CHEN20103736}.
+It is also a major benchmark problem in experimental parameterized algorithms.
+Of particular relevance is the PACE 2019 challenge, which included a
+{\sc Vertex Cover} track and documents a selection of highly engineered
+exact solvers and benchmarks~\cite{dzulfikar_et_al:LIPIcs.IPEC.2019.25}.
+The best-performing solvers in this line of work are typically not based on
+dynamic programming over tree decompositions. Rather, they rely on
+problem-specific reductions, kernelization, branching rules, local search,
+branch-and-reduce, branch-and-bound, and related exact-solver techniques
+\cite{AKIBA2016211,HespeLammSchulzStrash2019,CaiLinLuo2017}.

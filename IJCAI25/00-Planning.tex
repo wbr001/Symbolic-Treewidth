@@ -1,0 +1,87 @@
+\newpage 
+
+\section{Planning}
+
+
+
+\begin{itemize}
+    \item Wim and Samuel. Write a sketch for each of the symbolic operations we discussed today, and consider other possibilities
+    \item I will add you to the repository. 
+    \item Samuel: Translate your current implementation to the notation in the available header file. In particular, representing pairs (S,t) as a string. The first k positions represent the set, and either a single position or log t positions represent the size. 
+    \item If time allows, implement the naive translation of the naive DP into ODDs, just by explicitly enumerating all strings in the set, then getting the minimum odd representing this set, and decompressing back on each step. 
+
+\end{itemize}
+
+
+\subsection{Goals}
+
+\begin{itemize}
+\item Understanding ODDs and the ODD library. 
+\begin{itemize}
+\item Understand the definition of an ODD accordingly to the notation in the paper Oliveira-Vasily. 
+\item Define some ODDs using the ODD library. Implement a script/program that takes $n$ and $k$ and $i\in \{0,...,k-1\}$ as input and creates an ODD $D$ accepting all strings over $\{0,1\}$ where the number of $1$'s is equal to $i \mod k$. 
+\item Use operations in from the operation.h file to operate with ODDs. Ex: Construct the ODD accepting the union of $D(n,k,3)$ with $D(n,k,2)$. Make some tests with intersection, projection (renaming of symbols etc.).
+\item Write down the algorithm for the vertex cover here in latex, and implement the 5 functions. 
+\item For the tree decomposition stuff: Take a look at \url{https://arxiv.org/pdf/2205.10995.pdf} (Section 4 and Definition 8 of section 5 for the definition of instructive tree decompositions and DP on such decompositions).   Appendix B for an example of instructive tree decomposition. Section 5.3 for the specification of the vertex cover core. 
+\item I will send later the link for the tree-decomposition implementation stuff in C++.
+\end{itemize}
+\end{itemize}
+
+\subsection{Next steps (From March 07)}
+
+\begin{itemize}
+\item Wim: Write a very good version of the symbolic DP for vertex cover. The density of text/technical stuff should be good, there should be correctness proofs that the witness sets are updated correctly, and there should be decent pictures illustrating the algorithm. 
+\item Me: I will be writing abstract, intro, conclusion based on the information we already have. I also need to check the files to convert back and forth from graphs to abstract tree decompositions. 
+I will also send some scripts for the executing jobs in the cluster. 
+\item Samuel:
+\begin{itemize}
+\item (21st/March) Completing the implementation, adding the clean function, and retrieving a solution as an instructive tree decomposition. 
+\item (04/April) Completed experiments using the pace challenge inputs. Preferentially using the cluster. 
+\end{itemize}
+\item All: Think about items of section 4 (high treewidth small symbolic width). 
+\end{itemize}
+
+
+\section{Next Steps (From April 04)}
+
+\begin{enumerate}
+\item Samuel
+\begin{itemize}
+    \item Execute the winners of the VC pace challenge in all instances. 
+    \item Download the winner for the pace tree decomposition challenge \url{https://github.com/PACE-challenge/Treewidth}. 
+    \item Use the program to compute tree decompositions of the graphs in the pace challenge.
+    \item Try to get the optimal value if possible. Measure time. 
+    \item Wait for the program to convert td into itd, and then run the symbolic algorithm. 
+    \item Meanwhile just get the trivial path decompsosition. 
+\end{itemize}
+\item Mateus
+\begin{itemize}
+\item Get the conversion from td to itd working.
+\item finish the intro, and sketch of conclusion.
+\end{itemize}
+\item Wim: 
+\begin{itemize}
+\item Work out on the proofs. 
+\end{itemize}
+\end{enumerate}
+
+\section{Next Steps (From April 18)}
+
+\begin{abstract}
+\begin{itemize}
+    \item Samuel: 
+    \begin{itemize}
+        \item Create a realistic dataset to evaluate the VC problem parameterized by treewidth.
+        \begin{enumerate}
+            \item Approach 1. Small vertex cover. Simply generate a random bipartite graph where the left side has k vertices and the right side has n-k vertices. For each of the k vertices, sample a large number of edges and add them. Put also some edges between vertices in the cover. (Up to 20)
+            \item Approach 2 (NECESSARY). Generate random instructive tree decompositions of width at most k. (For each k between 1...100) you have a different experiment. Start from the root (the active labels at the root). Choose an operation that is compatible with that set of active labels. 
+            Increse a general counter for number of vertices and number of edges. When one of the counters have maxed out, just introduce the vertices that belong to the leave bags. 
+            \item Approach 3 (MAYBE). Same as before, but apply some rule to guarantee connectedness. 
+            \item Find datasets of graphs of small treewidth. Ex(PACE 2027 for the treewidth challenge). Very likely there are many other datasets for small treewidth. 
+            
+            
+
+        \end{enumerate}
+    \end{itemize}
+\end{itemize}
+\end{abstract}

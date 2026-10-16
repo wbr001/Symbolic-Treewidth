@@ -1,0 +1,202 @@
+\section{Preliminaries}
+
+\subsection{Basics}
+We let $\N:= \{0,1, \ldots \}$ be the set of {\em natural numbers}, 
+and $\Nplus:= \N \setminus \{0\}$ be the set of positive natural numbers. 
+For each $n \in \N$ we set $[n]:=\{1,2, \ldots,n\}$. According to this notation,
+$[0]:= \emptyset$. For each $\w \in \Nplus$, we let $\dbset{\w}:= \{0,1,\ldots,
+\w-1\}$. 
+
+
+A \emph{ranked alphabet} is a finite and nonempty set of symbols $\Sigma$ together with an associated arity function $\arityfunction : \Sigma \rightarrow \N$, specifying the arity of each symbol in $\Sigma$. The arity of $\Sigma$, denoted by $\arityfunction(\Sigma)$, is the
+maximum arity of a symbol in $\Sigma$. A \emph{term} over $\Sigma$ is a pair $\term = (\treeT, \lambda)$ where $\treeT$ is a tree, and $\lambda: \nodes{\treeT} \rightarrow \Sigma$ is a function that labels each node $\nodep \in \nodes{\treeT}$ with a symbol from $\Sigma$ whose arity is equal to the number of children of $\nodep$. In particular, leaf nodes are labeled with symbols of arity $0$. 
+
+We define a \emph{graph} as a pair $\graphG = (\vertexset,\edgeset)$, where $\vertexset \subset \N$ is a finite set of \emph{vertices}, and $\edgeset \subseteq \binom{\vertexset}{2}$ is a set of \emph{edges}.
+% We define a \emph{graph} as a triple $\graphG = (\vertexset,\edgeset,\rho)$, where $\vertexset \subset \N$ is a finite set of \emph{vertices}, $\edgeset \subset \N$ is a finite set of \emph{edges} and $\rho \subset \edgeset \times \vertexset$ is an incidence relation. 
+We may write $\vertexset_\graphG$ and $\edgeset_\graphG$ to denote the vertex and edge sets of a graph $\graphG$, respectively. The \emph{empty graph} is the graph $(\emptyset,\emptyset)$.
+% We may write $\vertexset_\graphG$, $\edgeset_\graphG$ and $\rho_\graphG$ to denote sets $\vertexset$, $\edgeset$ and $\rho$. We define the \emph{empty graph} as the graph $(\emptyset,\emptyset,\emptyset)$ with neither vertices, nor edges. 
+A \emph{graph invariant} is a function $\inv$ that maps each graph to a number in $\N$ such that $\inv(G) = \inv(G')$ for every pair of isomorphic graphs $G$ and $G'$. \todo{Do we need this notion?}
+
+
+
+
+
+\subsection{Ordered decision diagrams} 
+We let $\Sigma$ be an alphabet and $\ODDwidth \in \N$. A  $(\Sigma, \ODDwidth)$\emph{-layer} is a subset $B \subseteq \dbset{\ODDwidth} \times \Sigma \times \dbset{\ODDwidth}$. We denote the \emph{domain} of a $B$ by $\Dom(B):= \{q \;|\; (q,s,q') \in B\}$ and the \emph{image} of a layer by $\im(B):= \{q \;|\; (q',s,q) \in B\}$. We may alternatively refer to set $\Dom(B)$ of a layer as its \textit{left states} and set \textit{$\im(B)$} as its \textit{right states}.
+\todo{Check Terminology that is in use.}
+
+We let  $\B(\Sigma, \ODDwidth)$ denote the set of all $(\Sigma,\ODDwidth)$-layers. A $(\Sigma,\ODDwidth)$\emph{-ordered decision diagram} of length $l$ is a string $D = B_1B_2\ldots B_l \in {\B(\Sigma, \ODDwidth)}^l$. We let $\B(\Sigma,\ODDwidth)^{+} = \bigcup_{l\in \N_+}\B(\Sigma,\ODDwidth)^{l}$, and $\allodds(\Sigma) = \bigcup_{\ODDwidth\in \N_+} \B(\Sigma,\ODDwidth)^+$. 
+\\ 
+A $(\Sigma,\ODDwidth)$-ordered decision diagram is referred to as an \emph{ordered binary decision diagram} (from here on referred to as an OBDD) when alphabet $\Sigma$ is set to be the binary alphabet, $\{0,1\}$. We say that a string $s=s_1 s_2 \ldots s_k$ is read by $D$ if there is a sequence $(q_0, s_1,q_1)(q_1,s_2,q_2)\ldots(q_{k-1},s_k,q_k)$ where for each $i \in [k]$, $(q_{i-1},s_i,q_i) \in B_i$. If additionally $q_k = 1$ and $s$ has length $l$, then we say that string $s$ accepted by $\ODD$. The language of $\ODD$ is the set $\Lang(\ODD)= \{s\; | \; s \text{ is accepted by } D\}$. Note that we can always assume that for each $i \in [l] \setminus \{1\}$, $\Dom(B_i) = \im(B_{i-1})$. \
+\\
+The size of an ODD $\ODD = \B_1\B_2\dots \B_n$, denoted by $|\ODD|$ 
+is defined as $|\ODD| = |\Dom(\B_1)|+\sum_{i\in [n]} |\im(B_i)|$. The width 
+of $\ODD$ is defined as $\ODDwidth(\ODD) = \max\{|\im(\B_i)|\}$. 
+\\ 
+An ODD $\ODD$ is deterministic if $\Dom(B_1) = \{0\}$ and for each $i \in [l]$, for each $q \in \Dom(B_i)$, each $a \in \Sigma$ there is a unique $q'\in \im(B_i)$ such that $(q,s,q') \in B_i$. $D$ is said to be complete, if for each 
+$i\in [l]$, each $q\in \Dom(B)$, and each $s\in \Sigma$, 
+there is a $q'\in \im(B)$ such that $(q,s,q')\in B$.
+
+The following theorem is well known in the literature related to OBDDs \cite{bryant1986graph}. 
+
+
+\begin{theorem}\label{theorem:Minimize} \todo{Find reference. Are we sure we can cite the Bryant paper? There it says an ODD can be reduced in time nlogn. Is there another reference?}
+For each OBDD $\ODD$ of width $\omega$ and length $l$, one can construct in time $2^{O(\omega)}\cdot l$ an OBDD $\ODD^{\texttt{min}}$ with minimum number of states such that $\Lang(\ODD) = \Lang(\ODD^{\texttt{min}})$. If $\ODD$ is deterministic, $\ODD^{\min}$ can be constructed in time $O(\omega\cdot l)$. 
+\label{theorem:}
+    
+\end{theorem}
+
+Given an OBDD $\ODD$ we let $\minODD(\ODD)$, be the minimized OBDD $\ODD^{\texttt{min}}$ such that $\Lang(\ODD) = \Lang(\ODD^{\texttt{min}})$.
+
+
+\subsection{$k$-instructive Tree Decompositions} \todo{I think we should either explain what a tree decomposition is fully or describe it briefly and refer to a textbook for the details.} In this work, we adopt a formulation of tree decompositions that is particularly
+well suited to a formal, functional, and symbolic treatment.
+Namely, we define the notion of $k$-\emph{instructive tree decompositions}, which are terms encoding tree decompositions of width at most $k$ \cite{From2023}. For a
+standard introduction to tree decompositions and treewidth, we refer the reader
+to \cite{BlueBook}.
+
+\begin{definition}\label{def:InstructiveAlphabet}
+For each $k \in \N$, we let
+\begin{align}\nonumber
+    \Sigma_k = \{\leaflabel, \introvertexlabel{u},\forgetvertexlabel{u},
+    \introedgelabel{u}{v},\joinlabel| u,v\in [k+1],u\neq v\}
+\end{align}
+where $\leaflabel$ is a symbol of arity $0$, $\introvertexlabel{u}$, $\forgetvertexlabel{u}$ and $\introedgelabel{u}{v}$ are symbols of arity $1$, and $\joinlabel$ is a symbol of arity $2$. We refer to $\Sigma_k$ as the $k$-instructive alphabet.
+\end{definition}
+
+Terms over $\Sigma_k$ can be regarded as instructions to inductively construct graphs. Each node $p$ of a $k$-instructive tree decomposition $\term$ corresponds to a graph $G(\nodep)$ and a set $\activelabelsatnode{\nodep} \subseteq [k+1]$ of \emph{active labels}. In the base case, the instruction $\leaflabel$, which labels each leaf of $\term$, creates an empty graph with an empty set of active labels. Now, suppose that $\nodep$ is a node with a single child $\nodep'$, and let 
+$G(p') = (V_G,E_G,\rho_\graphG)$ and $\activelabelsatnode{\nodep'}$ be the graph, and set of of active labels associated with $p'$. For any \textit{inactive} label, $u \in [k+1]\setminus \activelabelsatnode{\nodep'}$, instruction $\introvertexlabel{u}$ adds a new vertex to $V_G$, labels it with $u$, and adds $u$ to the set of active labels, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} \cup \{\activelabelu\}$. For any $u \in \activelabelsatnode{p'}$, instruction $\forgetvertexlabel{u}$ erases the label from the current vertex labeled with $u$, and removes $u$ from the set of active labels, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} \setminus \{\activelabelu\}$ . The intuition is that the label $u$ is now free and can be used in the creation of a new vertex. For each two distinct labels $u,v \in \activelabelsatnode{\nodep'}$, the instruction $\introedgelabel{u}{v}$ creates a new edge between the current vertex labeled $u$ and the current vertex labeled $v$. The set of active labels $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'}$ remains the same. 
+Finally, suppose that $\nodep$ has two children $\nodep'$ and $\nodep''$. If $\activelabelsatnode{\nodep'} = \activelabelsatnode{\nodep''}$, then the instruction $\joinlabel$ creates a new graph by identifying, for each $u \in \activelabelsatnode{p'}$, the vertex of $G(p')$ labeled $u$ with the vertex of $G(p'')$ labeled $u$. Additionally, in this case, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} = \activelabelsatnode{\nodep''}$.
+
+
+The next theorem, whose proof can be found in \cite{From2023} states that $k$-instructive tree decompositions correspond precisely to graphs of treewidth at most $k$. 
+
+\begin{theorem}[Lemma 6 in \cite{From2023}]
+    Let $\mathcal{T}$ be a $k$-instructive tree decomposition over $\Sigma_k$, for a graph $G$. Graph $G$ has treewidth at most $k$.
+\end{theorem}
+
+
+\subsection{Dynamic Programming Cores}\label{DPcores}
+
+In this work, we will consider a dynamic programming algorithm over a $k$-instructive tree decomposition to operate using a functional framework known as the Dynamic Programming Core (DP-core) \cite{Baste2022,From2023} framework. 
+%We showcase the DP-core framework below in describing a function for each symbol of $\Sigma_k$ that updates a set of partial solutions at a given node.
+This framework assigns to each node of a k-instructive tree decomposition a set of local witnesses in accordance with the instruction at that node. Intuitively, a local witness $\witness \in \{0,1\}^*$, assigned to a node is a binary string recording a partial solution at that node.
+%We describe the components of a DP-core below.
+
+A DP-core operating on $k$-instructive tree decompositions is a record $\dpcore[k]$ consisting of the following components, where $\activelabelu,\activelabelv \in [k+1]$, and 
+$\activelabelu\neq \activelabelv$. 
+
+
+\begin{itemize}
+    \item $\leaf$, is a finite non-empty subset of ${\{0,1\}^*}$;
+    \item $\introvertex{\nodeu}:2^{[k]}\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\introedge{\nodeu}{\activelabelv}:2^{[k]}\times\{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\forgetvertex{\nodeu}:2^{[k]}\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$;
+    \item $\join:2^{[k]}\times \{0,1\}^*\times \{0,1\}^*\rightarrow 2^{\{0,1\}^*}$.
+    \item $\final:\{0,1\}^*\rightarrow \{0,1\}$. 
+    \item $\inv:2^{\{0,1\}^*}\rightarrow \N$. 
+\end{itemize}
+%
+
+For each $S\subseteq \{0,1\}^*$, we define $\introvertex{\nodeu}(b,S) = \bigcup_{\witness\in S} \introvertex{\nodeu}(b,S)$. 
+The extension of the remaining components of $\dpcore$ to subsets of strings is defined analogously. 
+
+%We extend the functions 
+%defined above from witnesses to witness sets as follows. 
+
+% \begin{definition}
+% Given a set  $b \subseteq 2^{[k]}$ and subsets $S, S'\subset \{0,1\}^*$, 
+% %
+% \begin{itemize} 
+%     \item $\introvertex{\nodeu}(b,S) = \bigcup_{w\in S} \introvertex{\nodeu}(b,w)$ 
+%     \item $\introedge{\nodeu}{\activelabelv}(b,S) =  \bigcup_{w\in S} \introedge{\nodeu}{\activelabelv}(b,w)$
+%     \item $\forgetvertex{\nodeu}(b,S) = \bigcup_{w\in S}\forgetvertex{\nodeu}(b,w)$
+%     \item $\join(b,S,S') = \bigcup_{w\in S,w' \in S' } \join(b,w,w')$
+% \end{itemize}
+% \end{definition}
+
+
+
+The above functions can be used to specify dynamic programming algorithms operating on $k$-instructive tree decompositions of graphs. The algorithm processes such a tree decomposition $\treedec = (\treeT,\lambda)$ from the leaves towards the root, assigning to each node $\nodep\in \nodes{\treeT}$ a finite subset of strings $\dynamization(\nodep)$ according to the following inductive process. 
+
+\begin{definition}[Dynamization]\label{Dynamization}
+$ $
+\begin{enumerate}
+\item If $\nodep$ is labeled $\leaflabel$ then $\dynamization(\nodep) = \leaf$%$\dynamization(\nodeu) = \emptyset$. 
+\item If $\nodep$ is an internal node of $\treedec$ with a unique child $\nodep'$, then 
+\begin{enumerate}
+    \item $\dynamization(\nodep) = \introvertex{\activelabelu}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\introvertexlabel{\activelabelu}$. 
+    \item $\dynamization(\nodep) = \forgetvertex{\activelabelu}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\forgetvertexlabel{\activelabelu}$.
+    \item $\dynamization(\nodep) = \introedge{\activelabelu}{\activelabelv}(\activelabelsatnode{\nodep},\dynamization(\nodep'))$ if $\nodep$ is labeled $\introedgelabel{\activelabelu}{\activelabelv}$. 
+\end{enumerate}
+\item If $\nodep$ is labeled $\joinlabel$ and has children $\nodep'$ and $\nodep''$, then $\dynamization(u) = \join(\activelabelsatnode{\nodep},\dynamization(\nodep'),\dynamization(\nodep''))$. 
+\end{enumerate}
+\end{definition}
+
+The DP-Core $\dpcore$ accepts a $k$-instructive tree decomposition  $\treedec$ if the set 
+$\dynamization(\rootfunction{\treedec})$ associated with the root node of $\treedec$ contains a final witness, 
+that is, a string $w$ such that $\final(w)=1$. The DP-Core $\dpcore$ is coherent if for 
+each graph $\graph$ of treewidth at most $k$, and each two $k$-instructive tree 
+decomposition $\treedec,\treedec'$ of $\graph$, $\dpcore$ accepts $\treedec$ if and only if 
+it accepts $\treedec'$. We say that a coherent DP-core $\dpcore$ computes a graph invariant 
+$\invariant$ if $\inv(\dynamization(\rootfunction{\treedec})) = \invariant(\graph)$ for each $k$-instructive tree decomposition $\treedec$ of $\graph$. 
+
+
+
+\paragraph*{Example: A DP-Core for Vertex Cover}
+\label{subsection:VC}
+Next, we define a witness for the {\sc Vertex Cover} DP-core. Such a witness at a node $\nodep$ of a k-instructive tree decomposition is a string of the form $ s\cdot t$ where $s$ is a binary string of length $|\activelabelsatnode{\nodep}|$ and represents a subset of active labels forming a partial solution, while $t$ is a number representing the size of the solution.\footnote{Number $t$ can further be encoded as a binary string and thus fully conform with the definition of our DP-core functions but for the sake of clarity of exposition we elect to represent it as a number.} We may refer to $s$ as the \textit{string component} and number $t$ as the \textit{size component} of the witness. The subset represented by $s$ depends on the set of labels $\activelabels \subseteq [k+1]$, that are active at a given node of the the tree decomposition. More specifically, let $l_1 < ... < l_{|s|}, l_i \in \activelabels(\nodep)$ be the active labels at a given node $\nodep$. Then the set represented by $s$ is $Active(s) = \{l_j \;:\; s_j=1\}$. For instance, let
+$\activelabelsatnode{\nodep} = \{2,4,5\}$ be the set of active labels at node $p$, then $s=101$ represents the set $\{2,5\}$ while $s'=011$ represents the set $\{4,5\}$.  
+
+Given a label $\activelabelu \in [k+1]$ and set of labels $\activelabels \subseteq [k+1]$ we let $\activelabels[\activelabelu] = |\{\activelabelv < \activelabelu : \activelabelv \in \activelabels \}|+1$ denote the index $\activelabelu$ takes in $\activelabels \cup \activelabelu$ when this set is ordered in ascending order. 
+
+\begin{definition}[Vertex Cover DP-core] \label{VCDP-core}
+Let $\activelabels \subseteq [k+1]$ be a set of active labels. The components of the {\sc Vertex Cover} DP-core are defined as follows:
+\begin{enumerate}
+
+\item \label{VCDP-coreLeaf}$\leaf = \{0\}$
+
+\item \label{VCDP-coreIntroVertex}$\introvertex{\activelabelu}(\activelabels,s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|} t)\\ = \{s_1\dots s_{\activelabels[\activelabelu]-1}\thickspace\textbf{x}\thickspace s_{\activelabels[\activelabelu]}\dots s_{|\activelabels|} t | \textbf{x} \in \dbset{2}\}$
+
+\item \label{VCDP-coreForgetVertex}$\forgetvertex{\activelabelu}(\activelabels,s_1\negthickspace\dots\negthinspace s_{\activelabels[\activelabelu]\negthinspace-\negthinspace1}s_{\activelabels[\activelabelu]}s_{\activelabels[\activelabelu]\negthinspace+\negthinspace1}\negthickspace\dots\negthinspace s_{|\activelabels|} t) \\ = 
+\left\{\begin{array}{l}
+\{s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|} \tau | \tau = t\negthickspace+\negmedspace1\} \mbox{ if $s_{\activelabels[\activelabelu]} = 1$} \\
+\{s_1\dots s_{\activelabels[\activelabelu]-1}s_{\activelabels[\activelabelu]+1}\dots s_{|\activelabels|} t\} \mbox{ otherwise.} 
+\end{array}\right. $
+
+
+\item \label{VCDP-coreIntroEdge}$\introedge{\activelabelu}{\activelabelv}(\activelabels,st)\\ = \left\{\begin{array}{l}
+\emptyset \mbox{ if $ s_{\activelabels[\activelabelu]} = 0 \land s_{\activelabels[\activelabelv]} = 0 $} \\ 
+\{st\} \mbox{ otherwise.} 
+\end{array}\right. $
+
+
+\item \label{VCDP-coreJoin}$\join(\activelabels, s_1\cdot t_1,s_2\cdot t_2) \\= \left\{
+\begin{array}{l}
+\emptyset \mbox{ if $s_1\neq s_2$} \\ 
+\{s_1\tau | \tau = t_1 + t_2\} \mbox{ otherwise.} 
+\end{array}\right.$
+
+\end{enumerate}
+
+\end{definition}
+
+
+The operation $\leaf$ in the above DP-core for {\sc Vertex Cover} produces a witness consisting of a single-character string \texttt{0}, representing an empty solution of size 0.
+
+The operation $\introvertex{\activelabelu}$ generates two new strings by modifying the input string: one with a \texttt{0} and the other with a \texttt{1} inserted at the position corresponding to $\activelabels[\activelabelu]$, while shifting all subsequent characters one place to the right.
+
+The operation $\forgetvertex{\activelabelu}$ either:
+\begin{itemize}
+    \item Removes the symbol at $\activelabels[\activelabelu]$ and increments the solution size \(t\) by 1 if the symbol is \texttt{1}, or
+    \item Removes the symbol at index $\activelabels[\activelabelu]$ if the symbol is \texttt{0} leaving the size component unchanged.
+\end{itemize}
+
+The operation $\introedge{\activelabelu}{\activelabelv}$ returns the empty set if both symbols at positions $\activelabels[\activelabelu]$ and $\activelabels[\activelabelv]$ are \texttt{0}. Otherwise, it outputs the input string unchanged.
+
+Finally, the operation $\join$ returns the empty set if the two input strings differ in their first $|\activelabels|$ characters. Otherwise, it returns a witness with identical string component, with the size component updated to the sum of the two input sizes.
+
+
+
+
+

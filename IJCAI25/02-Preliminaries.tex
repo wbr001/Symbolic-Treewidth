@@ -1,0 +1,107 @@
+%\newpage
+\section{Preliminaries}
+
+\subsection{Basics}
+We let $\N:= \{0,1, \ldots \}$ be the set of {\em natural numbers}, 
+and $\Nplus:= \N \setminus \{0\}$ be the set of positive natural numbers. 
+For each $n \in \N$ we set $[n]:=\{1,2, \ldots,n\}$. According to this notation,
+$[0]:= \emptyset$. For each $\w \in \Nplus$, we let $\dbset{\w}:= \{0,1,\ldots,
+\w-1\}$. 
+
+%\subsection{Ranked alphabets and Terms}
+A \emph{ranked alphabet} is a finite and nonempty set of symbols $\Sigma$ together with an associated arity function $\arityfunction : \Sigma \rightarrow \N$, specifying the arity of each symbol in $\Sigma$. The arity of $\Sigma$, denoted by $\arityfunction(\Sigma)$, is the
+maximum arity of a symbol in $\Sigma$. A \emph{term} over $\Sigma$ is a pair $\term = (\treeT, \lambda)$ where $\treeT$ is a tree, and $\lambda: \nodes{\treeT} \rightarrow \Sigma$ is a function that labels each node $\nodep \in \nodes{\treeT}$ with a symbol from $\Sigma$ whose arity is equal to the number of children of $\nodep$. In particular, leaf nodes are labeled with symbols of arity $0$. 
+
+%In the remainder of the text we may write $\nodes{\term}$ to mean $\nodes{\treeT}$, $|\term|$ to mean $|\nodes{\treeT}|$ and $\rootfunction{\term}$ to mean $\rootfunction{\treeT}$. The height of $\term$ is defined to be the height of $\treeT$. By $\terms{\Sigma}$ we denote the set of all terms over $\Sigma$. Given terms $\term_1 = (\treeT_1,\lambda_1), \ldots,\term_\arityr=(\treeT_\arityr,\lambda_\arityr)$ in $\terms{\Sigma}$, and a symbol $\symbola \in \Sigma$ of arity $\arityr$, we let $\symbola(\term_1, \ldots, \term_{\arityr})$ denote the term $\term = (\treeT, \lambda)$ where for some fresh node $\nodeu$ , tree $\treeT$ is the composition of $\nodeu$ and trees $\treeT_1, \ldots, \treeT_\arityr$ and function  $\lambda$ is defined as follows:
+%\begin{itemize}
+    %\item $\lambda(\nodeu) = \symbola$;
+    %\item   $\lambda|_{\nodes{\treeT_i}} = \lambda_i$ for $i \in [\arityr]$.
+%\end{itemize}
+
+We define a \emph{graph} as a triple $\graphG = (\vertexset,\edgeset,\rho)$, where $\vertexset \subset \N$ is a finite set of \emph{vertices}, $\edgeset \subset \N$ is a finite set of \emph{edges} and $\rho \subset \edgeset \times \vertexset$ is an incidence relation. 
+%For an edge $\edgee \in \edgeset$, we let $\epoints{\edgee} = \{\vertexv \in \vertexset | (\edgee,\vertexv) \in \rho\}$ denote the set of vertices incident to $\edgee$. 
+We may write $\vertexset_\graphG$, $\edgeset_\graphG$ and $\rho_\graphG$ to denote sets $\vertexset$, $\edgeset$ and $\rho$. We define the \emph{empty graph} as the graph $(\emptyset,\emptyset,\emptyset)$ with neither vertices, nor edges. 
+%We let \graphs denote the set of all graphs.
+A graph invariant is a function $\inv$ that sends each graph to a number in $\N$ in such a way that $\inv(G)=\inv(G')$ for each two isomorphic graphs $G$ and $G'$. 
+
+
+
+
+\subsection{Ordered decision diagrams} 
+We let $\Sigma$ be an alphabet and $\ODDwidth \in \N$. A  $(\Sigma, \ODDwidth)$\emph{-layer} is a subset $B \subseteq \dbset{\ODDwidth} \times \Sigma \times \dbset{\ODDwidth}$. We denote the \emph{domain} of a $B$ by $\Dom(B):= \{q \;|\; (q,s,q') \in B\}$ and the \emph{image} of a layer by $\im(B):= \{q \;|\; (q',s,q) \in B\}$. We may alternatively refer to set $\Dom(B)$ of a layer as its \textit{left states} and set \textit{$\im(B)$} as its \textit{right states}.
+\todo{Check Terminology that is in use.}
+\textcolor{blue}{
+We let  $\B(\Sigma, \ODDwidth)$ denote the set of all $(\Sigma,\ODDwidth)$-layers. A $(\Sigma,\ODDwidth)$\emph{-ordered decision diagram} of length $l$ is a string $D = B_1B_2\ldots B_l \in {\B(\Sigma, \ODDwidth)}^l$. We let $\B(\Sigma,\ODDwidth)^{+} = \bigcup_{l\in \N_+}\B(\Sigma,\ODDwidth)^{l}$, and $\allodds(\Sigma) = \bigcup_{\ODDwidth\in \N_+} \B(\Sigma,\ODDwidth)^+$. 
+\\ 
+A $(\Sigma,\ODDwidth)$-ordered decision diagram is referred to as an \emph{ordered binary decision diagram} (from here on referred to as an OBDD) when alphabet $\Sigma$ is set to be the binary alphabet, $\{0,1\}$. We say that a string $s=s_1 s_2 \ldots s_k$ is read by $D$ if there is a sequence $(q_0, s_1,q_1)(q_1,s_2,q_2)\ldots(q_{k-1},s_k,q_k)$ where for each $i \in [k]$, $(q_{i-1},s_i,q_i) \in B_i$. If additionally $q_k = 1$ and $s$ has length $l$, then we say that string $s$ accepted by $\ODD$. The language of $\ODD$ is the set $\Lang(\ODD)= \{s\; | \; s \text{ is accepted by } D\}$. Note that we can always assume that for each $i \in [l] \setminus \{1\}$, $\Dom(B_i) = \im(B_{i-1})$. \
+\\
+The size of an ODD $\ODD = \B_1\B_2\dots \B_n$, denoted by $|\ODD|$ 
+is defined as $|\ODD| = |\Dom(\B_1)|+\sum_{i\in [n]} |\im(B_i)|$. The width 
+of $\ODD$ is defined as $\ODDwidth(\ODD) = \max\{|\im(\B_i)|\}$. 
+\\ 
+An ODD $\ODD$ is deterministic if $\Dom(B_1) = \{0\}$ and for each $i \in [l]$, for each $q \in \Dom(B_i)$, each $a \in \Sigma$ there is a unique $q'\in \im(B_i)$ such that $(q,s,q') \in B_i$. $D$ is said to be complete, if for each 
+$i\in [l]$, each $q\in \Dom(B)$, and each $s\in \Sigma$, 
+there is a $q'\in \im(B)$ such that $(q,s,q')\in B$.
+}
+The following theorem is well known in the literature related to OBDDs \cite{bryant1986graph}. 
+
+
+\begin{theorem}\label{theorem:Minimize} 
+For each OBDD $\ODD$ of width $\omega$ and length $l$, one can construct in time $2^{O(\omega)}\cdot l$ an OBDD $\ODD^{\texttt{min}}$ with minimum number of states such that $\Lang(\ODD) = \Lang(\ODD^{\texttt{min}})$. If $\ODD$ is deterministic, $\ODD^{\min}$ can be constructed in time $O(\omega\cdot l)$. 
+\label{theorem:}
+    
+\end{theorem}
+
+\begin{comment}
+Given a OBDD $\ODD$, it is always possible to find i minimum sized OBDD accepting the same language in FTP time.
+\begin{theorem}[\cite{MeloOliveira2022}] \label{theorem:Minimize} 
+For each OBDD $\ODD$ of length $l$ and width $\omega$ one can find an OBDD $\ODD^{\texttt{min}}$ of minimum size and width, with the property that $\Lang(\ODD)=\Lang(\ODD^{\texttt{min}})$ in time $2^{O(\omega\cdot2^\omega)}l^{O(1)}$. If $\ODD$ is deterministic, $(\ODD)^{\texttt{min}}$ can be found in time $2^{O(\omega\cdot\log\omega)}l^{O(1)}$.
+\end{theorem}
+\end{comment}
+
+\subsection{$k$-instructive Tree Decompositions}
+Next, we define the notion of $k$-\emph{instructive tree decompositions}, which are terms encoding tree decompositions of width at most $k$ \cite{From2023}. 
+
+\begin{definition}
+For each $k \in \N$, we let
+\begin{align}
+    \Sigma_k = \{\leaflabel, \introvertexlabel{u},\forgetvertexlabel{u},\nonumber\\
+    \introedgelabel{u}{v},\joinlabel| u,v\in [k+1],u\neq v\}
+\end{align}
+where $\leaflabel$ is a symbol of arity $0$, $\introvertexlabel{u}$, $\forgetvertexlabel{u}$ and $\introedgelabel{u}{v}$ are symbols of arity $1$, and $\joinlabel$ is a symbol of arity $2$. We refer to $\Sigma_k$ as the $k$-instructive alphabet.
+\end{definition}
+
+Terms over $\Sigma_k$ can be regarded as instructions to inductively construct graphs. Each node $p$ of a $k$-instructive tree decomposition $\term$ corresponds to a graph $G(\nodep)$ and a set $\activelabelsatnode{\nodep} \subseteq [k+1]$ of \emph{active labels}. In the base case, the instruction $\leaflabel$, which labels each leaf of $\term$, creates an empty graph with an empty set of active labels. Now, suppose that $\nodep$ is a node with a single child $\nodep'$, and let 
+$G(p') = (V_G,E_G,\rho_\graphG)$ and $\activelabelsatnode{\nodep'}$ be the graph, and set of of active labels associated with $p'$. For any \textit{inactive} label, $u \in [k+1]\setminus \activelabelsatnode{\nodep'}$, instruction $\introvertexlabel{u}$ adds a new vertex to $V_G$, labels it with $u$, and adds $u$ to the set of active labels, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} \cup \{\activelabelu\}$. For any $u \in \activelabelsatnode{p'}$, instruction $\forgetvertexlabel{u}$ erases the label from the current vertex labeled with $u$, and removes $u$ from the set of active labels, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} \setminus \{\activelabelu\}$ . The intuition is that the label $u$ is now free and can be used in the creation of a new vertex. For each two distinct labels $u,v \in \activelabelsatnode{\nodep'}$, the instruction $\introedgelabel{u}{v}$ creates a new edge between the current vertex labeled $u$ and the current vertex labeled $v$. The set of active labels $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'}$ remains the same. 
+Finally, suppose that $\nodep$ has two children $\nodep'$ and $\nodep''$. If $\activelabelsatnode{\nodep'} = \activelabelsatnode{\nodep''}$, then the instruction $\joinlabel$ creates a new graph by identifying, for each $u \in \activelabelsatnode{p'}$, the vertex of $G(p')$ labeled $u$ with the vertex of $G(p'')$ labeled $u$. Additionally, in this case, $\activelabelsatnode{\nodep} = \activelabelsatnode{\nodep'} = \activelabelsatnode{\nodep''}$.
+
+\begin{comment}
+Given a $k$-instructive tree decomposition $\term$ and a node $p$ of $\term$, 
+we let $\activelabelsatnode(p)$ denote the set of active labels at node $p$. This set is defined as induction as follows: 
+
+\begin{itemize}
+    \item $\activelabelsatnode(\leaf) = \emptyset$
+    \item Let $p$ be a node with set of active labels $b$, and let $\nodeu$ and $\nodev$ be labels in $[k+1]$.
+    \begin{enumerate}
+        \item $\activelabelsatnode(\introvertex{\nodeu}(p)) = b\cup \{\nodeu\}$ ... 
+    \end{enumerate}
+    \item $\activelabelsatnode(\join(p,p')) = \activelabelsatnode(p)$ 
+\end{itemize}
+\end{comment}
+
+%\todo[inline]{Find/create illustration/example of k-instructive tree-decompositions}
+
+%Given a $k$-ITD $\treedec = (\treeT',\lambda)$, a node $\nodep \in \treeT$ with associated set of active labels $\activelabelsatnode$, for each $\activelabelu \in [k+1]$ we let $\activelabelsatnode_\activelabelu =\{\activelabelv \in \activelabelsatnode: \activelabelv\leq \activelabelu\}$. \todo{Is this necessary?}
+
+The next theorem, whose proof can be found in \cite{From2023} states that $k$-instructive tree decompositions correspond precisely to graphs of treewidth at most $k$. 
+
+\begin{theorem}[Lemma 6 in \cite{From2023}]
+    Let $\mathcal{T}$ be a $k$-instructive tree decomposition over $\Sigma_k$, for a graph $G$. Graph $G$ has treewidth at most $k$.
+\end{theorem}
+
+
+
+
+
+
+

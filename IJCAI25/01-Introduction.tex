@@ -1,0 +1,90 @@
+\section{Introduction}
+Treewidth is a graph-theoretic measure that quantifies how tree-like a given graph is. This measure has found fundamental applications in a wide variety of subfields of artificial intelligence, such as in the study of constraint satisfaction problems \cite{dalmau2002constraint,samer2010constraint}, knowledge representation \cite{gottlob2010bounded}, graph neural networks \cite{barcelo2021graph}, bayesian networks \cite{elidan2008learning}, etc. In particular, many computationally-hard combinatorial problems arising in these fields can be solved in time $f(k)\cdot n^{O(1)}$ on $n$-vertex graphs of treewidth at most $k$. Here, $f(k)$ is a function that depends only on the treewidth of the graph, but not on its number of vertices. 
+
+One of the most prominent approaches for solving computational problems on graphs parameterized by treewidth is dynamic programming over tree decompositions \cite{Baste2022,From2023,hagerup2000dynamic}. In this setting, the nodes of the tree-decomposition are processed from the leaves towards the root, and a set of strings encoding partial solutions is assigned to each node. The set of strings associated with the root node can then be used to decide whether the problem has a solution on the given graph, and if yes, to find a solution of optimal cost. Such a solution is constructed by backtracking. 
+
+Although dynamic programming algorithms over tree decompositions have found numerous practical applications, these algorithms suffer from two main drawbacks. The first is that the time to process a node of the decomposition is lower-bounded by the number of strings in the set associated with that node. The second is that the very process of computing an optimal tree decomposition is expensive, in the sense that the best algorithm for this task runs in time $2^{O(k^2)}\cdot n^{O(1)}$ \cite{korhonen2023improved}, while there are constant-factor approximation algorithms working in time $2^{O(k)}\cdot n$ \cite{korhonen2023single}. 
+
+\begin{comment}
+\textcolor{red}{
+The computational complexity of such algorithms is tightly related to the maximum number of local witnesses produced at a node during the dynamic programming process. In typical cases, the number of local witnesses grows as a function of the width of the decomposition. In typical cases such a function is upper bounded by $2^{O(k)}$ or $2^{O(k\log k)}$. 
+}
+\end{comment}
+
+\subsection{Our results}
+
+In this work, we introduce a new general framework that combines dynamic programming on tree decompositions with symbolic computation. More specifically, we introduce the notion of a symbolic dynamic programming core, which is a formalism that allows one to define dynamic programming algorithms where the sets of strings representing partial solutions are encoded implicitly, using ordered-binary decision diagrams. The idea is that the size of an OBDD representing a set $S$ may be drastically smaller than the number of strings in $S$. For instance, if all strings in $\{0,1\}^k$ belong to $S$, then the number of strings in $S$ is $2^{k}$, while the size of an OBDD representing $S$ is just $O(k)$. In the case of dynamic programming algorithms it is reasonable to use OBDDs to represent sets of partial solutions because the inductive process used to construct these sets introduces a lot of redundancies. 
+
+Developing symbolic algorithms for combinatorial problems presents several challenges when compared with the development of explicit DP algorithms. First, in explicit DP models, the chosen encoding of partial solutions does not impact the computational complexity significantly. However, in symbolic approaches, small details of the encoding can drastically affect the width of the OBDDs representing the set of partial solutions associated with a given node. A poor choice of representation may lead to an exponential blow-up in the OBDD size, making the symbolic approach impractical for large problem instances. Second, for the algorithm to work efficiently, the OBDD representing the set of solutions at each node must be constructed in polynomial time relative to the size of the OBDDs of its child nodes. This requires the introduction of new techniques for the manipulation of OBDDs to ensure that intermediate OBDD representations remain compact and manageable throughout the computation.
+
+\begin{comment}
+\textcolor{red}{
+The motivation for this approach stems from the fact that the size of an OBDD may be exponentially smaller than the number of strings it represents. For eaxample, the set $\{0,1\}^n$ has $2^{n}$ strings. Nevertheless, this set can be represented by an OBDD with $2n+1$ states. 
+}
+
+\todo[inline]{SPEAK ABOUT WIDTH, Hybrid width, Automatic Relations, Etc} 
+
+\end{comment}
+
+As a concrete example, we use our approach to devise a symbolic dynamic programming core for the {\sc Vertex Cover} problem \cite{chen2024vertex,cai2017finding}. A vertex-cover in a graph $G$ is a set of vertices that is incident with all edges of $G$. In the {\em vertex cover} problem, we are given a graph $G$, and the goal is to find a minimum-size vertex cover. Our symbolic algorithm is guaranteed to work in time $2^{O(k)}\cdot n$, where $n$ is the size of graph and $k$ is the width of the input decomposition. Nevertheless, depending on the instance, the algorithm may work significantly more efficiently because of the efficient representation of sets of partial witnesses using OBDDs. We evaluated our algorithm experimentally on random graphs, obtained by deleting vertices from two classes of graphs that have high treewidth: clique graphs, and grid graphs. In both cases, the sizes of the obtained representations were orders of magnitude smaller than the number of partial witnesses associated with a node of the input decomposition. It is worth noting that our algorithm is also quite resilient to the width of the decomposition used to guide the dyanmic programming process. In particular instead of constructing optimal tree decompositions, which is an expensive process, we run our algorithm in the naively constructed path-decompositions, where vertices are introduced in lexicographical order, edges are introduced as soon as the corresponding pairs of vertices have been introduced, and vertices are forgotten as soon as there is no more edge to be introduced. 
+
+
+\newcommand{\solutionWidth}{p}
+\newcommand{\functionclassautomaton}{\mathcal{A}}
+%\newcommand{\Lang}{\mathcal{L}}
+\newcommand{\detCalB}{\widehat{\mathcal{B}}}
+\newcommand{\D}{D} 
+
+
+\begin{comment}
+%\textcolor{blue}{
+An important complexity measure in the context of symbolic computation is the {\em width} of an OBDD, that is to say, the maximum number of states in one of its levels  \cite{Bollig2014width,Bollig2012symbolic,Hachtel1993symbolic,Woelfel2006symbolic,Sawitzki2004implicit}.
+For each fixed $\solutionWidth\in \N$, an OBDD of width at most $\solutionWidth$ can be encoded as a word over the alphabet $\detCalB(\solutionWidth)$ of all layers of width at most $\solutionWidth$.
+This allows one to define classes of Boolean functions using automata theoretic formalisms. More specifically, a finite automaton $\functionclassautomaton$ over $\detCalB(\solutionWidth)$ defines the class
+$\mathcal{F}(\functionclassautomaton) = \{f_\D\;:\; \D\in \Lang(\functionclassautomaton)\}$ of all functions computed 
+by OBDDs accepted by $\functionclassautomaton$. A crucial feature of this approach is the fact that, as shown in \cite{MeloOliveira2022}, second-order finite automata can be canonized with respect to the {\em class of functions} it represents, and classes of functions represented by second-order automata are closed under 
+usual Boolean operations, as well as several other higher-order operations \cite{MeloOliveira2022}. 
+%}
+\end{comment}
+
+\begin{comment}
+
+\subsection{Related Work}
+
+\paragraph{Dynamic Programming Cores}
+
+
+
+\paragraph{OBDD Proof Systems}
+
+Instructive Tree Decompositions provide us with a way to specify the order in which 
+the obdd's are applied. 
+
+
+
+
+\paragraph{Vertex-Cover Problem} 
+
+
+\paragraph{Second-Order Finite Automata}
+
+
+
+
+
+
+This algorithm has been used to develop algorithms for a wide variety of combinatorial problems, such as {\sc Vertex Cover}, {\sc Dominating Set}, {\sc Hamiltonian Cycle}, {\sc Independent Set}, and many others.
+
+In this work, we introduce a symbolic a approach for the representation of sets of local witnesses. More specifically, sets of local witnesses are represented by ordered binary decision diagrams (OBDDs). 
+
+The main technical difficulty when defining a symbolic framework is that during the construction process, the OBDD representing the set of local witnesses corresponding to a node $u$ must be constructed with basis on the OBDD(s) representing the set(s) corresponding to the child(ren) of $u$. This imposes serious technical dificulties, because the efficiency of the process is highly dependent on how the information is being represented. 
+
+\todo[inline]{Goal: Develop symbolic algorithms for combinatorial problems parameterize by treewidth.
+
+Main Representation of symbolic sets: Ordered Decision Diagrams.
+
+
+}
+
+
+\end{comment}

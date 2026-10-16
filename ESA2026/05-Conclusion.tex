@@ -1,0 +1,28 @@
+% \section{Conclusion}
+
+% We introduced a symbolic dynamic programming framework for algorithms on tree
+% decompositions, formalized through Symbolic DP-cores. We
+% showed that several natural graph classes admit compact symbolic representations
+% theoretically, and that, more generally, symbolic representations can remain
+% compact even when treewidth is large, yielding substantial practical gains over
+% standard DP. As directions for future work, it would be natural
+% to develop SDP-cores for a broader range of graph problems and to identify
+% additional graph classes admitting low SDP-width under suitable decompositions.
+% Another promising avenue is the optimization of symbolic DP implementations to
+% better compete in running time, particularly on dense and highly symmetric graph
+% classes where treewidth alone provides limited guidance.
+
+\section{Conclusion}
+
+We presented a symbolic dynamic programming framework for tree decompositions in
+which witness sets are represented implicitly using OBDDs. Instantiated for
+{\sc Vertex Cover}, the resulting algorithm runs in time
+$2^{\BigO(k)}\cdot n^{\BigO(1)}$ on a width-$k$ decomposition, matching the
+expected single-exponential dependence on the decomposition width.
+
+Our experiments indicate that, symbolic representations can offer meaningful practical gains over explicit witness tables. On random instances, OBDD-based witness sets remained orders of magnitude
+smaller than their explicit counterparts and enabled processing substantially
+larger decomposition widths than standard DP. On rook graphs symbolic DP remained tractable well beyond the point where explicit
+DP exhausted memory. These results suggest that symbolic representations can
+extend the practical reach of decomposition-based dynamic programming on
+instances where treewidth alone offers limited guidance.

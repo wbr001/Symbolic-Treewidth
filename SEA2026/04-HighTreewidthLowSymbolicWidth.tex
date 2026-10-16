@@ -1,0 +1,121 @@
+\section{High Treewidth, Low SDP-width}\label{sec:HighTlowS}
+
+In this section, we introduce the notion of \emph{symbolic dynamic programming
+width} (SDP-width) of a graph with respect to a DP-core $\dpcore$. Let $\dpcore$
+be a DP-core solving a graph problem $\problem$, and let $\treedec$ be a tree
+decomposition of a graph $\graphG$. We define the SDP-width
+$\sw(\dpcore,\treedec)$ to be the maximum width of a (minimized) OBDD representing
+a set of partial solutions at any node of $\treedec$.
+We define the SDP-width of a graph $\graphG$ with respect to $\dpcore$ as the
+minimum SDP-width over all tree decompositions of $\graphG$:
+
+$$\sw(\dpcore,\graphG)
+= \argmin_{\treedec}\sw(\dpcore,\treedec).$$
+
+
+We note that SDP-width depends on the DP-core $\dpcore$, particular in the
+chosen (binary) encoding of witnesses representing partial solutions for the
+problem $\problem$. It is also sensitive to the choice of tree decomposition
+$\treedec$, as this determines the subgraphs induced at the bags of
+$\treedec$. For example, a $k$-instructive path decomposition of an $n$-vertex
+complete graph that introduces vertices and edges in an arbitrary order may
+contain a bag whose induced subgraph is an arbitrary $n$-vertex graph, including
+graphs with unbounded SDP-width. This motivates the study of graph classes for which high treewidth does not
+necessarily imply large SDP-width under suitably chosen decompositions.
+
+A tree decomposition is \emph{immediate} if whenever a node $u$ is an introduce node, introducing a vertex $v$, all edges incident with $v$ in the graph $G_u$ are subsequently introduced and vertex $v$ is forgotten as soon all edges of $\graphG$ incident to $\vertexv$ are introduced. 
+% \section{High Treewidth, Low SDP-width}\label{sec:HighTlowS}
+
+% In this section we introduce the notion of \emph{symbolic dynamic programming width} (SDP-width) of a graph with respect to a Dp-core $\dpcore$. Given a DP-core $\dpcore$ solving graph problem $\problem$ and tree decomposition $\treedec$ of $\graphG$, we let the SDP-width, $\sw(\dpcore, \treedec)$, be the width of the highest width (minimized) OBDD representing a set of partial solutions at a node of $\treedec$. In turn, we define the SDP-width of graph $\graphG$ to be the minimum SDP-width over all tree decompositions over $\graphG$, 
+% $$\sw(\dpcore, \graphG) = \argmin_{\treedec}\sw(\dpcore, \treedec).$$ 
+% We note that SDP-width depends on DP-core $\dpcore$ particularly in the chosen (binary) encoding of witnesses comprising sets of partial solutions for problem $\problem$. SDP-width is also sensitive to tree decomposition $\treedec$ particularly in the subgraphs induced at bags of $\treedec$. For instance, a $k$-instructive path decomposition of an $n$-node complete graph that arbitrarily introduces nodes and edges may include a bag representing an $n$-node graph from any graph class including whatever/any graph class realizing unbounded SDP-width.
+
+In the remainder of this section, we survey classes of graphs that exhibit high treewidth while either analytically or  empirically (see section \ref{sec:Experiments}) admitting compact symbolic representations over immediate tree decompositions.
+
+\paragraph*{Complete graphs}
+For each $n \in \N$, the complete graph on $n$ vertices, denoted $K_n$, is the graph $\graphG = (\vertexset,\edgeset)$ where $\vertexset = [n]$ and $\edgeset = \binom{[n]}{2}$. That is, $K_n$ contains an edge between every pair of distinct vertices. It is well known that the treewidth of $K_n$ is $n-1$.
+
+\begin{observation}[Folklore]
+    The \emph{complete graph} on $n$ vertices has treewidth $n-1$.
+\end{observation}
+
+For the case of complete graphs the we are able to bound SDP-width analytically. 
+
+\begin{proposition} \todo{Create appendix section for proofs in section \ref{sec:HighTlowS}.}
+\label{proposition:WidthClique}
+Let $\dpcore$ be a DP-core solving {\sc Vertex Cover} and let $\treedec$ be an immediate tree decomposition of complete graph $K_n$. Then $\sw(\dpcore, \treedec)$ is bounded above by $\BigO(1)$.\todo{Should I write big theta here? Its obvious that I will never do better than $\BigO(1)$ isn't it?}
+\end{proposition}
+
+In particular the set of partial solutions for {\sc Vertex Cover} at any node of an immediate path decomposition can be represented by an OBDD of width 4. We note that Proposition \ref{proposition:WidthClique} holds over any immediate tree decomposition and is independent of variable ordering.
+
+ 
+\paragraph*{Grid graphs}
+For $r,s \in \N^+$, the \emph{$r \times s$ grid graph}, denoted $G_{r,s}$, is the graph $\graphG = (\vertexset,\edgeset)$ where $\vertexset = [r] \times [s]$, and $\edgeset = \bigl\{\{(i,j),(i',j')\} \mid |i-i'| + |j-j'| = 1 \bigr\}$. Intuitively, the vertices of $G_{r,s}$ can be arranged in an $r \times s$ grid, where each vertex $(i,j)$ is adjacent to its horizontally and vertically
+neighboring grid points. Grid graphs have treewidth $\Theta(\min\{r,s\})$. 
+
+\begin{observation}[Folklore]
+    The $r \times s$ grid graph has treewidth $\Theta(\min\{r,s\})$.
+\end{observation}
+In particular the family of square grids $G_{n,n}$ has treewidth $\Theta(n)$.
+
+
+\paragraph*{Rook graphs}
+For $r \in \N^+$, the \emph{rook graph} $R_r$ is the graph
+$\graphG = (\vertexset,\edgeset)$ where $\vertexset = [r] \times [r]$, and $\edgeset = \bigl\{\{(i,j),(i',j')\} \mid i=i' \text{ or } j=j',\ (i,j) \neq (i',j') \bigr\}$.
+Intuitively, the vertices can be arranged in an $r \times r$ grid, where any two vertices in the same row or the same column are adjacent, so that each row and each column induces a clique. Rook graph $R_r$ is equivalently characterized as the line graph of the complete bipartite graph $K_{r,r}$ and or the 2 dimensional Hamming graph over set  $[r]$. Under each of these characterizations, $R_r$ rook graphs have been shown to have treewidth $\Theta(r^2)$ (See Theorem 1.2 in \cite{HarveyTreewidth2014} and Theorem 3 in \cite{SUNILCHANDRAN} respectively).
+
+\begin{observation}
+    The $N$-node rook graph $R_n$ (with $N = n^2$) has treewidth $\Theta(N)$.
+\end{observation}
+
+The SDP-width of can be bounded analytically. In particular, given an $N$-node rook graph the set of partial solutions for {\sc Vertex Cover} at any node of an immediate path decomposition can be represented by an OBDD of width at most $2^{\BigO(\sqrt{N})}$.
+
+\begin{proposition}
+\label{proposition:SDPWidthRook}
+Let $\dpcore$ be a DP-core solving {\sc Vertex Cover} and let $\treedec$ be an immediate tree decomposition of the $N$-node rook graph $R_n$ (with $N = n^2$). Then $\sw(\dpcore, \treedec)$ is bounded above by $2^{\BigO(\sqrt{N})}$.
+\end{proposition}
+
+We note that the number of optimal solutions to {\sc Vertex Cover} on $N$-node rook graphs is given by $(\sqrt{N})! \gg 2^{\sqrt{N}}$. We note that Proposition \ref{proposition:SDPWidthRook} holds over any immediate tree decomposition and is independent of variable ordering.
+
+
+
+% \begin{proposition}
+% \label{proposition:WidthClique}
+% Let $K_n$ be the clique graph with $n$ vertices. The final set of partial solutions can be represented by an OBDD of width at most $3$.
+% \end{proposition}
+
+% A tree decomposition is immediate if whenever a node $u$ is an introduce node, introducing a vertex $v$, all edges incident with $v$ in the graph $G_u$ are introduced. 
+
+
+% \begin{conjecture}
+% \label{conjecture:CliquesSmallWidth}
+% If $G$ is a clique, and $T$ is an immediate tree decomposition of $G$, then the symbolic algorithm has "Small" width during the whole process.  
+% \end{conjecture}
+
+% \begin{conjecture}
+% Complete Bipartite graphs? 
+% \end{conjecture}
+
+
+% Now, the challenge is to generalize this to a larger of class of graphs. 
+
+% \begin{conjecture}
+% \label{generalization:}
+% What happens for split graphs? 
+% \end{conjecture}
+
+
+% \begin{conjecture}
+% \label{generalization:}
+% What happens for graphs of small neighborhood diversity?
+% \end{conjecture}
+
+% \begin{conjecture}
+% What happens with graphs that are covered by $k$ bipartite graphs? 
+% \end{conjecture}
+
+% \todo[inline]{\url{https://arxiv.org/pdf/1201.3091.pdf}}
+
+
+
+
